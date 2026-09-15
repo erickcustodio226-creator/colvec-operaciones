@@ -3,549 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COLVEC C&M - Operaciones</title>
-    <!-- Tailwind CSS CDN -->
+    <title>COLVEC C&M | Gestión Documental y Operaciones</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & ReactDOM CDN -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel for JSX compilation in browser -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- FontAwesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased">
-    <div id="root"></div>
+<body class="bg-slate-900 text-slate-800 min-h-screen flex items-center justify-center p-4">
 
-    <!-- Firebase SDKs CDN -->
+    <!-- Contenedor Principal -->
+    <div id="app" class="w-full max-w-md">
+        
+        <!-- VISTA DE LOGIN Y CREAR USUARIO -->
+        <div id="auth-container" class="bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white mb-3 shadow-lg text-xl">
+                    🏢
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900">COLVEC C&M</h1>
+                <p class="text-sm text-slate-500">Gestión Documental y Operaciones</p>
+            </div>
+
+            <div id="error-msg" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg"></div>
+
+            <form id="auth-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Correo Electrónico</label>
+                    <input type="email" id="email" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Contraseña</label>
+                    <input type="password" id="password" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                </div>
+                
+                <button type="submit" id="submit-btn" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 shadow-md text-sm">
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <button id="toggle-mode" class="text-xs text-blue-600 hover:underline font-medium">
+                    ¿No tienes cuenta? Regístrate aquí
+                </button>
+            </div>
+        </div>
+
+        <!-- VISTA DEL PANEL (DASHBOARD) - Oculta hasta iniciar sesión -->
+        <div id="dashboard-container" class="hidden bg-white rounded-2xl shadow-2xl p-8">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Panel de Operaciones</h2>
+                    <p class="text-xs text-slate-500" id="user-email-display"></p>
+                </div>
+                <button id="logout-btn" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition">
+                    Salir
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-center">
+                <div class="p-4 bg-blue-50 border border-blue-100 rounded-xl text-left">
+                    <h3 class="font-bold text-blue-900 text-sm mb-1">¡Conectado exitosamente!</h3>
+                    <p class="text-xs text-blue-700">Tu sistema ya está vinculado a Firebase Hosting y Auth.</p>
+                </div>
+                
+                <div class="p-6 border border-slate-200 rounded-xl">
+                    <p class="text-sm text-slate-600 mb-3">Aquí puedes registrar tus cartas y documentos de COLVEC.</p>
+                    <button onclick="alert('¡Módulo listo para registrar operaciones!')" class="w-full py-3 bg-slate-900 text-white text-xs font-medium rounded-lg hover:bg-slate-800 transition shadow">
+                        + Nueva Carta u Operación
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CÓDIGO DE FIREBASE Y FUNCIONALIDAD -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+        // Tus llaves correctas de Firebase
         const firebaseConfig = {
-          apiKey: "AIzaSyB80H5VQs7OrVdPNidN_h_68TweJH-P6rI",
+          apiKey: "AIzaSyB80H5vQs7OrVdPNidN_h_68TweJH-P6rI",
           authDomain: "colvec-operaciones.firebaseapp.com",
           projectId: "colvec-operaciones",
           storageBucket: "colvec-operaciones.appspot.com",
           messagingSenderId: "745332416981",
-          appId: "1:745332416981:web:12cd58e3b448c9e7a6dd5c"
+          appId: "1:745332416981:web:12cd58e3b448c9e7a6dd5c",
+          measurementId: "G-8T9CRMB851"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
 
-        window.firebaseApp = { app, auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, addDoc, getDocs, doc, updateDoc, deleteDoc };
-        
-        window.dispatchEvent(new Event('firebase-ready'));
-    </script>
+        let isRegistering = false;
 
-    <!-- Main React Application -->
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+        const authForm = document.getElementById('auth-form');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const submitBtn = document.getElementById('submit-btn');
+        const toggleModeBtn = document.getElementById('toggle-mode');
+        const errorMsg = document.getElementById('error-msg');
+        const authContainer = document.getElementById('auth-container');
+        const dashboardContainer = document.getElementById('dashboard-container');
+        const userEmailDisplay = document.getElementById('user-email-display');
+        const logoutBtn = document.getElementById('logout-btn');
 
-        function App() {
-            const [user, setUser] = useState(null);
-            const [loading, setLoading] = useState(true);
-            const [email, setEmail] = useState('');
-            const [password, setPassword] = useState('');
-            const [loginError, setLoginError] = useState('');
+        // Alternar entre iniciar sesión y registrarse
+        toggleModeBtn.addEventListener('click', () => {
+            isRegistering = !isRegistering;
+            if (isRegistering) {
+                submitBtn.textContent = 'Crear Cuenta';
+                toggleModeBtn.textContent = '¿Ya tienes cuenta? Inicia Sesión';
+            } else {
+                submitBtn.textContent = 'Iniciar Sesión';
+                toggleModeBtn.textContent = '¿No tienes cuenta? Regístrate aquí';
+            }
+            errorMsg.classList.add('hidden');
+        });
 
-            const [cartas, setCartas] = useState([]);
-            const [searchTerm, setSearchTerm] = useState('');
-            const [filterAnio, setFilterAnio] = useState('');
-            const [showModal, setShowModal] = useState(false);
-            const [editingId, setEditingId] = useState(null);
+        // Manejar el botón de Enviar (Login o Registro)
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.classList.add('hidden');
+            const email = emailInput.value;
+            const password = passwordInput.value;
 
-            const [formData, setFormData] = useState({
-                numero: '',
-                anio: new Date().getFullYear().toString(),
-                cliente: '',
-                atencion: '',
-                cargo: '',
-                conformidad: '',
-                direccion: '',
-                expediente: '',
-                detalle: '',
-                enlace: ''
-            });
-
-            useEffect(() => {
-                const checkFirebase = () => {
-                    if (window.firebaseApp) {
-                        const { auth, onAuthStateChanged } = window.firebaseApp;
-                        onAuthStateChanged(auth, (u) => {
-                            setUser(u);
-                            setLoading(false);
-                            if (u) loadCartas();
-                        });
-                    } else {
-                        setTimeout(checkFirebase, 100);
-                    }
-                };
-                window.addEventListener('firebase-ready', checkFirebase);
-                checkFirebase();
-            }, []);
-
-            const handleLogin = async (e) => {
-                e.preventDefault();
-                setLoginError('');
-                try {
-                    const { auth, signInWithEmailAndPassword } = window.firebaseApp;
+            try {
+                if (isRegistering) {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                } else {
                     await signInWithEmailAndPassword(auth, email, password);
-                } catch (err) {
-                    setLoginError('Error al iniciar sesión: ' + err.message);
                 }
-            };
-
-            const handleLogout = async () => {
-                const { auth, signOut } = window.firebaseApp;
-                await signOut(auth);
-            };
-
-            const loadCartas = async () => {
-                try {
-                    const { db, collection, getDocs } = window.firebaseApp;
-                    const querySnapshot = await getDocs(collection(db, "cartas"));
-                    const items = [];
-                    querySnapshot.forEach((docSnap) => {
-                        items.push({ id: docSnap.id, ...docSnap.data() });
-                    });
-                    items.sort((a, b) => new Date(b.fechaISO || 0) - new Date(a.fechaISO || 0));
-                    setCartas(items);
-                } catch (err) {
-                    console.error("Error loading cartas:", err);
-                }
-            };
-
-            const handleSave = async (e) => {
-                e.preventDefault();
-                try {
-                    const { db, collection, addDoc, doc, updateDoc } = window.firebaseApp;
-                    const payload = {
-                        ...formData,
-                        fechaISO: new Date().toISOString(),
-                        creadoEn: new Date().toLocaleDateString()
-                    };
-
-                    if (editingId) {
-                        await updateDoc(doc(db, "cartas", editingId), payload);
-                    } else {
-                        await addDoc(collection(db, "cartas"), payload);
-                    }
-
-                    setShowModal(false);
-                    setEditingId(null);
-                    setFormData({
-                        numero: '',
-                        anio: new Date().getFullYear().toString(),
-                        cliente: '',
-                        atencion: '',
-                        cargo: '',
-                        conformidad: '',
-                        direccion: '',
-                        expediente: '',
-                        detalle: '',
-                        enlace: ''
-                    });
-                    loadCartas();
-                } catch (err) {
-                    alert("Error al guardar: " + err.message);
-                }
-            };
-
-            const handleEdit = (item) => {
-                setEditingId(item.id);
-                setFormData({
-                    numero: item.numero || '',
-                    anio: item.anio || '',
-                    cliente: item.cliente || '',
-                    atencion: item.atencion || '',
-                    cargo: item.cargo || '',
-                    conformidad: item.conformidad || '',
-                    direccion: item.direccion || '',
-                    expediente: item.expediente || '',
-                    detalle: item.detalle || '',
-                    enlace: item.enlace || ''
-                });
-                setShowModal(true);
-            };
-
-            const handleDelete = async (id) => {
-                if (confirm("¿Estás seguro de eliminar este registro?")) {
-                    try {
-                        const { db, doc, deleteDoc } = window.firebaseApp;
-                        await deleteDoc(doc(db, "cartas", id));
-                        loadCartas();
-                    } catch (err) {
-                        alert("Error al eliminar: " + err.message);
-                    }
-                }
-            };
-
-            if (loading) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center bg-slate-100">
-                        <div className="text-center">
-                            <i className="fas fa-spinner fa-spin text-4xl text-blue-600 mb-3"></i>
-                            <p className="text-slate-600 font-medium">Cargando COLVEC Operaciones...</p>
-                        </div>
-                    </div>
-                );
+            } catch (error) {
+                errorMsg.textContent = "Error: " + error.message;
+                errorMsg.classList.remove('hidden');
             }
+        });
 
-            if (!user) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 px-4">
-                        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
-                            <div className="text-center mb-8">
-                                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-xl text-2xl font-bold mb-4 shadow-lg shadow-blue-500/30">
-                                    <i className="fas fa-building-shield"></i>
-                                </div>
-                                <h1 className="text-2xl font-bold text-slate-900">COLVEC C&M</h1>
-                                <p className="text-sm text-slate-500 mt-1">Gestión Documental y Operaciones</p>
-                            </div>
-
-                            {loginError && (
-                                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                                    {loginError}
-                                </div>
-                            )}
-
-                            <form onSubmit={handleLogin} className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Correo Electrónico</label>
-                                    <input 
-                                        type="email" 
-                                        required
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm transition"
-                                        placeholder="correo@colvec.com"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Contraseña</label>
-                                    <input 
-                                        type="password" 
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm transition"
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                                <button 
-                                    type="submit"
-                                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-200 flex items-center justify-center gap-2"
-                                >
-                                    <i className="fas fa-sign-in-alt"></i> Iniciar Sesión
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                );
+        // Controlar pantallas según si hay sesión iniciada
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authContainer.classList.add('hidden');
+                dashboardContainer.classList.remove('hidden');
+                userEmailDisplay.textContent = user.email;
+            } else {
+                dashboardContainer.classList.add('hidden');
+                authContainer.classList.remove('hidden');
+                emailInput.value = '';
+                passwordInput.value = '';
             }
+        });
 
-            const filteredCartas = cartas.filter(item => {
-                const matchSearch = (item.numero || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    (item.cliente || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    (item.atencion || '').toLowerCase().includes(searchTerm.toLowerCase());
-                const matchAnio = filterAnio ? item.anio === filterAnio : true;
-                return matchSearch && matchAnio;
-            });
-
-            return (
-                <div className="min-h-screen bg-slate-100 pb-12">
-                    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold text-lg shadow">
-                                    <i className="fas fa-building-shield"></i>
-                                </div>
-                                <div>
-                                    <h1 className="font-bold text-slate-900 leading-tight">COLVEC C&M</h1>
-                                    <p className="text-xs text-slate-500">Panel de Operaciones</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <span className="text-sm text-slate-600 hidden sm:inline">{user.email}</span>
-                                <button 
-                                    onClick={handleLogout}
-                                    className="px-3 py-1.5 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 rounded-lg text-sm font-medium transition flex items-center gap-2"
-                                >
-                                    <i className="fas fa-sign-out-alt"></i> Salir
-                                </button>
-                            </div>
-                        </div>
-                    </header>
-
-                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-                        <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
-                            <div className="flex flex-col sm:flex-row gap-3 flex-1">
-                                <div className="relative flex-1">
-                                    <i className="fas fa-search absolute left-3.5 top-3 text-slate-400"></i>
-                                    <input 
-                                        type="text"
-                                        placeholder="Buscar por número, cliente o atención..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 bg-white rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm shadow-sm"
-                                    />
-                                </div>
-                                <select 
-                                    value={filterAnio}
-                                    onChange={(e) => setFilterAnio(e.target.value)}
-                                    className="px-4 py-2 bg-white rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm shadow-sm"
-                                >
-                                    <option value="">Todos los años</option>
-                                    <option value="2026">2026</option>
-                                    <option value="2025">2025</option>
-                                    <option value="2024">2024</option>
-                                </select>
-                            </div>
-                            <button 
-                                onClick={() => {
-                                    setEditingId(null);
-                                    setFormData({
-                                        numero: '',
-                                        anio: new Date().getFullYear().toString(),
-                                        cliente: '',
-                                        atencion: '',
-                                        cargo: '',
-                                        conformidad: '',
-                                        direccion: '',
-                                        expediente: '',
-                                        detalle: '',
-                                        enlace: ''
-                                    });
-                                    setShowModal(true);
-                                }}
-                                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition flex items-center justify-center gap-2 text-sm"
-                            >
-                                <i className="fas fa-plus"></i> Nueva Carta / Operación
-                            </button>
-                        </div>
-
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-600 tracking-wider">
-                                            <th className="py-3 px-4">Número</th>
-                                            <th className="py-3 px-4">Año</th>
-                                            <th className="py-3 px-4">Cliente</th>
-                                            <th className="py-3 px-4">Atención / Cargo</th>
-                                            <th className="py-3 px-4">Conformidad / Exp.</th>
-                                            <th className="py-3 px-4">Enlace</th>
-                                            <th className="py-3 px-4 text-center">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-200 text-sm text-slate-700">
-                                        {filteredCartas.length === 0 ? (
-                                            <tr>
-                                                <td colSpan="7" className="py-8 text-center text-slate-400">
-                                                    No se encontraron registros.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            filteredCartas.map((item) => (
-                                                <tr key={item.id} className="hover:bg-slate-50/80 transition">
-                                                    <td className="py-3.5 px-4 font-semibold text-blue-600">{item.numero}</td>
-                                                    <td className="py-3.5 px-4">{item.anio}</td>
-                                                    <td className="py-3.5 px-4 font-medium">{item.cliente}</td>
-                                                    <td className="py-3.5 px-4">
-                                                        <div className="font-medium text-slate-900">{item.atencion}</div>
-                                                        <div className="text-xs text-slate-500">{item.cargo}</div>
-                                                    </td>
-                                                    <td className="py-3.5 px-4">
-                                                        <div className="text-xs"><span className="font-semibold">Conf:</span> {item.conformidad}</div>
-                                                        <div className="text-xs text-slate-500"><span className="font-semibold">Exp:</span> {item.expediente}</div>
-                                                    </td>
-                                                    <td className="py-3.5 px-4">
-                                                        {item.enlace ? (
-                                                            <a href={item.enlace} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium transition">
-                                                                <i className="fas fa-external-link-alt"></i> Ver Drive
-                                                            </a>
-                                                        ) : (
-                                                            <span className="text-slate-400 text-xs">Sin enlace</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-3.5 px-4 text-center">
-                                                        <div className="flex items-center justify-center gap-2">
-                                                            <button onClick={() => handleEdit(item)} className="p-1.5 text-slate-500 hover:text-blue-600 transition" title="Editar">
-                                                                <i className="fas fa-edit"></i>
-                                                            </button>
-                                                            <button onClick={() => handleDelete(item.id)} className="p-1.5 text-slate-500 hover:text-red-600 transition" title="Eliminar">
-                                                                <i className="fas fa-trash-alt"></i>
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </main>
-
-                    {showModal && (
-                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-                                <div className="flex justify-between items-center mb-6 pb-3 border-b border-slate-200">
-                                    <h2 className="text-lg font-bold text-slate-900">
-                                        {editingId ? 'Editar Operación / Carta' : 'Nueva Carta u Operación'}
-                                    </h2>
-                                    <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fas fa-times text-xl"></i>
-                                    </button>
-                                </div>
-
-                                <form onSubmit={handleSave} className="space-y-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Número de Carta</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                value={formData.numero}
-                                                onChange={(e) => setFormData({...formData, numero: e.target.value})}
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm"
-                                                placeholder="Ej. CARTA N.° 001-2026/CGCOLV"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Año</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                value={formData.anio}
-                                                onChange={(e) => setFormData({...formData, anio: e.target.value})}
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm"
-                                                placeholder="2026"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Cliente / Empresa</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                value={formData.cliente}
-                                                onChange={(e) => setFormData({...formData, cliente: e.target.value})}
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm"
-                                                placeholder="Ej. HIDRANDINA S.A."
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Atención (Persona)</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                value={formData.atencion}
-                                                onChange={(e) => setFormData({...formData, atencion: e.target.value})}
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm"
-                                                placeholder="Ej. JUAN PÉREZ"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Cargo</label>
-                                            <input 
-                                                type="text" 
-                                                value={formData.cargo}
-                                                onChange={(e) => setFormData({...formData, cargo: e.target.value})}
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm"
-                                                placeholder="Ej. JEFE DE UNIDAD"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Conformidad</label>
-                                            <input 
-                                                type="text" 
-                                                value={formData.conformidad}
-                                                onChange={(e) => setFormData({...formData, conformidad: e.target.value})}
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm"
-                                                placeholder="Ej. CH-4552"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Dirección / Sede</label>
-                                            <input 
-                                                type="text" 
-                                                value={formData.direccion}
-                                                onChange={(e) => setFormData({...formData, direccion: e.target.value})}
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm"
-                                                placeholder="Ej. Av. Larco 123"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Expediente</label>
-                                            <input 
-                                                type="text" 
-                                                value={formData.expediente}
-                                                onChange={(e) => setFormData({...formData, expediente: e.target.value})}
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm"
-                                                placeholder="Ej. EXP-001"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Enlace de Google Drive</label>
-                                        <input 
-                                            type="url" 
-                                            value={formData.enlace}
-                                            onChange={(e) => setFormData({...formData, enlace: e.target.value})}
-                                            className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm"
-                                            placeholder="https://drive.google.com/..."
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Detalle / Observaciones</label>
-                                        <textarea 
-                                            rows="3"
-                                            value={formData.detalle}
-                                            onChange={(e) => setFormData({...formData, detalle: e.target.value})}
-                                            className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm"
-                                            placeholder="Detalles adicionales..."
-                                        ></textarea>
-                                    </div>
-
-                                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
-                                        <button 
-                                            type="button"
-                                            onClick={() => setShowModal(false)}
-                                            className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition"
-                                        >
-                                            Cancelar
-                                        </button>
-                                        <button 
-                                            type="submit"
-                                            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow transition"
-                                        >
-                                            Guardar Registro
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        // Cerrar sesión
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+        });
     </script>
 </body>
 </html>
