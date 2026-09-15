@@ -1,610 +1,667 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COLVEC C&M | Gestión de Obras y Operaciones</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Ajuste de scroll suave para móvil */
-        body { -webkit-tap-highlight-color: transparent; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="Plataforma operativa y gerencial de COLVEC C&M S.A.C.">
+  <title>COLVEC ERP | Operaciones</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Manrope','sans-serif'] }, colors: { brand: { 50:'#eff6ff',500:'#2563eb',600:'#1d4ed8',700:'#1e40af',950:'#172554' } } } } }
+  </script>
+  <style>
+:root { color-scheme: light; }
+* { -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+body { min-width: 320px; font-family: Manrope, sans-serif; }
+.auth-grid { background-image: linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px); background-size: 42px 42px; transform: perspective(500px) rotateY(-8deg) scale(1.15); }
+.field { display: block; }
+.field > span { display:block; margin-bottom:.45rem; font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#475569; }
+.field input,.field select,.field textarea { width:100%; border:1px solid #cbd5e1; border-radius:.8rem; background:#fff; padding:.78rem .9rem; font-size:.875rem; outline:none; transition:.15s; }
+.field input:focus,.field select:focus,.field textarea:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+.btn-primary,.btn-secondary,.btn-danger { display:inline-flex; min-height:44px; align-items:center; justify-content:center; gap:.5rem; border-radius:.8rem; padding:.7rem 1rem; font-size:.875rem; font-weight:800; transition:.15s; }
+.btn-primary { background:#2563eb; color:#fff; box-shadow:0 8px 20px rgba(37,99,235,.18); }
+.btn-primary:hover { background:#1d4ed8; }
+.btn-primary:disabled { cursor:not-allowed; background:#94a3b8; box-shadow:none; }
+.btn-secondary { border:1px solid #cbd5e1; background:#fff; color:#334155; }
+.btn-secondary:hover { background:#f8fafc; }
+.btn-danger { background:#fef2f2; color:#b91c1c; }
+.card { border:1px solid #e2e8f0; border-radius:1rem; background:#fff; box-shadow:0 1px 3px rgba(15,23,42,.04); }
+.kpi { position:relative; overflow:hidden; padding:1.15rem; }
+.kpi:after { content:""; position:absolute; right:-22px; bottom:-32px; width:90px; height:90px; border-radius:999px; background:currentColor; opacity:.05; }
+.status { display:inline-flex; align-items:center; border-radius:999px; padding:.28rem .65rem; font-size:.7rem; font-weight:800; white-space:nowrap; }
+.status-blue { background:#dbeafe; color:#1e40af; }.status-green { background:#dcfce7;color:#166534; }.status-amber { background:#fef3c7;color:#92400e; }.status-red { background:#fee2e2;color:#991b1b; }.status-slate { background:#e2e8f0;color:#334155; }
+.nav-link { display:flex; min-height:46px; align-items:center; gap:.75rem; border-radius:.8rem; padding:.7rem .9rem; font-size:.875rem; font-weight:700; color:#94a3b8; }
+.nav-link:hover { background:rgba(255,255,255,.06); color:#fff; }
+.nav-link.active { background:#2563eb; color:#fff; box-shadow:0 8px 18px rgba(37,99,235,.25); }
+.mobile-link { display:flex; min-width:0; flex-direction:column; align-items:center; gap:.2rem; border-radius:.7rem; padding:.35rem .2rem; font-size:.62rem; font-weight:800; color:#64748b; }
+.mobile-link.active { color:#1d4ed8; background:#eff6ff; }
+.table-wrap { width:100%; overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th { padding:.75rem; text-align:left; font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; color:#64748b; background:#f8fafc; }
+td { border-top:1px solid #e2e8f0; padding:.85rem .75rem; font-size:.8rem; vertical-align:middle; }
+.step-line { height:3px; flex:1; background:#cbd5e1; }.step-line.done { background:#22c55e; }
+dialog::backdrop { backdrop-filter:blur(3px); }
+@media (max-width:640px) { .card { border-radius:.9rem; } th,td { padding:.7rem .6rem; } }
+@media print { aside,header,#mobile-nav,.no-print { display:none!important; } .lg\:pl-72{padding-left:0!important} main{padding:0!important} .card{box-shadow:none;break-inside:avoid} }
+
+  </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen pb-20 md:pb-6">
+<body class="bg-slate-100 text-slate-900 antialiased">
+  <div id="toast" class="fixed right-4 top-4 z-[100] hidden max-w-sm rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-2xl" role="status"></div>
 
-    <!-- VISTA DE AUTENTICACIÓN -->
-    <div id="auth-container" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
-        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
-            <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white mb-3 shadow-lg text-2xl">
-                    ⚡
-                </div>
-                <h1 class="text-2xl font-black text-slate-900 tracking-tight">COLVEC C&M S.A.C.</h1>
-                <p class="text-xs text-slate-500 font-medium mt-1">Plataforma Móvil de Obras e Ingeniería</p>
-            </div>
-
-            <div id="error-msg" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl font-medium"></div>
-
-            <form id="auth-form" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Correo Corporativo</label>
-                    <input type="email" id="email" required placeholder="usuario@colvecsac.com" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Contraseña</label>
-                    <input type="password" id="password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-                </div>
-                
-                <button type="submit" id="submit-btn" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg text-sm">
-                    Iniciar Sesión
-                </button>
-            </form>
-
-            <div class="mt-6 text-center">
-                <button id="toggle-mode" class="text-xs text-blue-600 hover:underline font-semibold">
-                    ¿No tienes cuenta? Regístrate aquí
-                </button>
-            </div>
+  <section id="auth-view" class="min-h-screen grid lg:grid-cols-[1.1fr_.9fr]">
+    <div class="hidden lg:flex bg-slate-950 p-12 text-white relative overflow-hidden">
+      <div class="absolute inset-0 opacity-30 auth-grid"></div>
+      <div class="relative z-10 flex max-w-xl flex-col justify-between">
+        <div class="flex items-center gap-3">
+          <div class="grid h-12 w-12 place-items-center rounded-2xl bg-blue-600 text-xl font-black">C</div>
+          <div><p class="font-extrabold">COLVEC C&M S.A.C.</p><p class="text-sm text-slate-400">Ingeniería · Construcción · Electromecánica</p></div>
         </div>
+        <div>
+          <p class="mb-4 text-sm font-bold uppercase tracking-[.25em] text-blue-400">Control operativo</p>
+          <h1 class="text-5xl font-extrabold leading-[1.08]">De la asignación a la conformidad, sin perder datos.</h1>
+          <p class="mt-6 max-w-lg text-lg leading-8 text-slate-300">Una sola trazabilidad para obras, logística, seguridad, cuadrillas, costos y cierre técnico.</p>
+        </div>
+        <p class="text-xs text-slate-500">Datos confiables para decisiones de Gerencia.</p>
+      </div>
     </div>
-
-    <!-- DASHBOARD PRINCIPAL -->
-    <div id="dashboard-container" class="hidden min-h-screen flex flex-col">
-        
-        <!-- Header Móvil / Desktop -->
-        <header class="bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-40 shadow-sm flex justify-between items-center">
-            <div class="flex items-center space-x-2.5">
-                <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-base shadow">
-                    ⚡
-                </div>
-                <div>
-                    <h1 class="font-bold text-slate-900 text-sm leading-tight">COLVEC C&M</h1>
-                    <p class="text-[10px] text-slate-500 font-medium">Obras & Operaciones Campo</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-2">
-                <span class="text-xs text-slate-600 font-medium hidden sm:inline" id="user-email-display"></span>
-                <button id="logout-btn" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-lg transition">
-                    Salir
-                </button>
-            </div>
-        </header>
-
-        <!-- BARRA DE NAVEGACIÓN INFERIOR (OPTIMIZADA PARA CELULARES) -->
-        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 flex justify-around p-1 sm:p-2 shadow-lg md:relative md:border-t-0 md:bg-transparent md:shadow-none md:justify-center md:gap-2 md:my-4">
-            <button onclick="cambiarSeccion('obras')" id="nav-obras" class="flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl bg-blue-600 text-white transition">
-                <span class="text-base md:text-sm md:mr-1.5">🏗️</span>
-                <span>Obras</span>
-            </button>
-            <button onclick="cambiarSeccion('gastos')" id="nav-gastos" class="flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-200 transition">
-                <span class="text-base md:text-sm md:mr-1.5">💰</span>
-                <span>Gastos</span>
-            </button>
-            <button onclick="cambiarSeccion('activos')" id="nav-activos" class="flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-200 transition">
-                <span class="text-base md:text-sm md:mr-1.5">🛠️</span>
-                <span>Activos</span>
-            </button>
-            <button onclick="cambiarSeccion('tareo')" id="nav-tareo" class="flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-200 transition">
-                <span class="text-base md:text-sm md:mr-1.5">⏱️</span>
-                <span>Tareo</span>
-            </button>
-            <button onclick="cambiarSeccion('jefatura')" id="nav-jefatura" class="flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-200 transition">
-                <span class="text-base md:text-sm md:mr-1.5">📊</span>
-                <span>Resumen</span>
-            </button>
-        </nav>
-
-        <!-- CONTENIDO PRINCIPAL -->
-        <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
-            
-            <!-- MÓDULO 1: OBRAS, SERVICIOS, EXPEDIENTES Y ADELANTOS -->
-            <div id="sec-obras" class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                <!-- Formulario -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
-                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b flex items-center gap-2">
-                        <span>➕ Registración de Obra / Servicio</span>
-                    </h2>
-                    <form id="obra-form" class="space-y-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tipo de Servicio</label>
-                            <select id="obra-tipo" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-500">
-                                <option value="Ejecución de Obra">Ejecución de Obra (Media Tensión)</option>
-                                <option value="Servicio Técnico / Pozo a Tierra">Servicio Técnico / Pozo a Tierra</option>
-                                <option value="Expediente Técnico">Expediente Técnico / Provias</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nombre / Proyecto</label>
-                            <input type="text" id="obra-nombre" required placeholder="Ej. Sistema Media Tensión Chimbote" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Cliente / Entidad</label>
-                            <input type="text" id="obra-cliente" required placeholder="Ej. Sr. Emilio Millio / Particular" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Presupuesto (S/.)</label>
-                                <input type="number" step="0.01" id="obra-presupuesto" required placeholder="0.00" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Adelanto (S/.)</label>
-                                <input type="number" step="0.01" id="obra-adelanto" value="0" required class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-blue-600">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Avance Actual (%)</label>
-                                <input type="number" min="0" max="100" id="obra-avance" value="0" required class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-blue-700">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Estado</label>
-                                <select id="obra-estado" class="w-full px-2 py-2.5 rounded-xl border border-slate-300 text-xs font-medium">
-                                    <option value="En Ejecución">En Ejecución</option>
-                                    <option value="En Evaluación">En Evaluación</option>
-                                    <option value="Finalizado">Finalizado</option>
-                                    <option value="Paralizado">Paralizado</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-md mt-2">
-                            Guardar Registro de Campo
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Lista de Registros -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:col-span-2 flex flex-col">
-                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b flex justify-between items-center">
-                        <span>Control de Proyectos y Avances</span>
-                        <span id="obra-count" class="text-[11px] bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-bold">0 reg.</span>
-                    </h2>
-                    <div id="lista-obras" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
-                        <div class="text-center py-8 text-slate-400 text-xs">Cargando datos...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MÓDULO 2: CONTROL DE GASTOS Y COMPROBANTES -->
-            <div id="sec-gastos" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
-                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b">💰 Registrar Gasto / Factura</h2>
-                    <form id="gasto-form" class="space-y-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Proveedor</label>
-                            <input type="text" id="gas-proveedor" required placeholder="Ej. ITESA / Silicon / Aragcu" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nº Comprobante</label>
-                                <input type="text" id="gas-num" required placeholder="F001-XXXX" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Monto (S/.)</label>
-                                <input type="number" step="0.01" id="gas-monto" required placeholder="0.00" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-emerald-700">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Detalle del Gasto / Material</label>
-                            <textarea id="gas-desc" rows="2" required placeholder="Detalle de compra..." class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Aprobación</label>
-                            <select id="gas-estado" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium">
-                                <option value="Pendiente">Pendiente de Revisión</option>
-                                <option value="Aprobado">Aprobado</option>
-                                <option value="Rechazado">Rechazado</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-md">
-                            Registrar Comprobante
-                        </button>
-                    </form>
-                </div>
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:col-span-2 flex flex-col">
-                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b flex justify-between items-center">
-                        <span>Historial de Gastos</span>
-                        <span id="gas-total" class="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold">Total: S/. 0.00</span>
-                    </h2>
-                    <div id="lista-gastos" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
-                        <div class="text-center py-8 text-slate-400 text-xs">Cargando gastos...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MÓDULO 3: ACTIVOS Y HERRAMIENTAS DE CAMPO -->
-            <div id="sec-activos" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
-                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b">🛠️ Asignar Activo / Equipo</h2>
-                    <form id="activo-form" class="space-y-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nombre del Equipo</label>
-                            <input type="text" id="act-nombre" required placeholder="Ej. Telurómetro / Megómentro / EPP" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Código / Serie</label>
-                                <input type="text" id="act-serie" required placeholder="COL-EQ-01" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Estado</label>
-                                <select id="act-estado" class="w-full px-2 py-2.5 rounded-xl border border-slate-300 text-xs font-medium">
-                                    <option value="Operativo">Operativo</option>
-                                    <option value="En Campo">Asignado a Campo</option>
-                                    <option value="Mantenimiento">Mantenimiento</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Responsable / Ubicación</label>
-                            <input type="text" id="act-ubicacion" required placeholder="Ej. Téc. Juan / Obra Chimbote" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
-                        </div>
-                        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-md">
-                            Guardar Equipo
-                        </button>
-                    </form>
-                </div>
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:col-span-2 flex flex-col">
-                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b flex justify-between items-center">
-                        <span>Inventario de Campo</span>
-                        <span id="act-count" class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full font-bold">0 activos</span>
-                    </h2>
-                    <div id="lista-activos" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
-                        <div class="text-center py-8 text-slate-400 text-xs">Cargando inventario...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MÓDULO 4: TAREO DE PERSONAL DE CAMPO -->
-            <div id="sec-tareo" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
-                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b">⏱️ Marcar Asistencia / Tareo</h2>
-                    <form id="tareo-form" class="space-y-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Colaborador / Personal</label>
-                            <input type="text" id="tar-personal" required placeholder="Nombres y Apellidos" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Obra / Asignación</label>
-                            <input type="text" id="tar-proyecto" required placeholder="Nombre de obra o comisión" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Fecha</label>
-                                <input type="date" id="tar-fecha" required class="w-full px-2 py-2 rounded-xl border border-slate-300 text-xs">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Horas Trab.</label>
-                                <input type="number" id="tar-horas" value="8" required class="w-full px-2 py-2 rounded-xl border border-slate-300 text-xs font-bold">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Condición</label>
-                            <select id="tar-estado" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium">
-                                <option value="Asistencia Normal">Asistencia Normal</option>
-                                <option value="Horas Extra">Horas Extra</option>
-                                <option value="Permiso / Falta">Permiso / Falta</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition shadow-md">
-                            Registrar Tareo
-                        </button>
-                    </form>
-                </div>
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:col-span-2 flex flex-col">
-                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b flex justify-between items-center">
-                        <span>Reporte de Asistencia Semanal</span>
-                        <span id="tar-count" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">0 tareos</span>
-                    </h2>
-                    <div id="lista-tareo" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
-                        <div class="text-center py-8 text-slate-400 text-xs">Cargando tareo...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MÓDULO 5: PANEL DE JEFATURA -->
-            <div id="sec-jefatura" class="hidden space-y-4 sm:space-y-6">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
-                    <h2 class="text-lg font-black text-slate-900 mb-1">Resumen General de Operaciones</h2>
-                    <p class="text-xs text-slate-500 mb-5">Indicadores en tiempo real para gerencia y supervisores de COLVEC C&M S.A.C.</p>
-                    
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                        <div class="p-4 bg-blue-50 border border-blue-100 rounded-2xl">
-                            <span class="text-[10px] font-black text-blue-600 uppercase tracking-wider block">Obras Activas</span>
-                            <h3 class="text-2xl font-black text-blue-900 mt-1" id="stat-obras">0</h3>
-                        </div>
-                        <div class="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                            <span class="text-[10px] font-black text-emerald-600 uppercase tracking-wider block">Gastos Aprobados</span>
-                            <h3 class="text-xl font-black text-emerald-900 mt-1" id="stat-gastos">S/. 0.00</h3>
-                        </div>
-                        <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl">
-                            <span class="text-[10px] font-black text-indigo-600 uppercase tracking-wider block">Equipos Registrados</span>
-                            <h3 class="text-2xl font-black text-indigo-900 mt-1" id="stat-activos">0</h3>
-                        </div>
-                        <div class="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
-                            <span class="text-[10px] font-black text-amber-600 uppercase tracking-wider block">Jornadas Tareadas</span>
-                            <h3 class="text-2xl font-black text-amber-900 mt-1" id="stat-tareo">0</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </main>
+    <div class="flex items-center justify-center p-5 sm:p-10 bg-white">
+      <form id="login-form" class="w-full max-w-md space-y-5">
+        <div class="lg:hidden flex items-center gap-3 mb-8">
+          <div class="grid h-11 w-11 place-items-center rounded-2xl bg-blue-600 text-white font-black">C</div>
+          <div><p class="font-extrabold">COLVEC C&M</p><p class="text-xs text-slate-500">Gestión operativa</p></div>
+        </div>
+        <div><h2 class="text-3xl font-extrabold tracking-tight">Bienvenido</h2><p class="mt-2 text-sm text-slate-500">Ingresa con tu cuenta corporativa.</p></div>
+        <label class="field"><span>Correo corporativo</span><input id="login-email" type="email" autocomplete="email" required placeholder="nombre@colvecsac.com"></label>
+        <label class="field"><span>Contraseña</span><input id="login-password" type="password" autocomplete="current-password" required minlength="6" placeholder="••••••••"></label>
+        <p id="login-error" class="hidden rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700"></p>
+        <button class="btn-primary w-full" type="submit">Ingresar a la plataforma</button>
+        <p class="text-center text-xs leading-5 text-slate-400">Las cuentas y roles son administrados por Gerencia. No se permite el registro público.</p>
+      </form>
     </div>
+  </section>
 
-    <!-- SCRIPT FIREBASE Y LÓGICA MÓVIL EN TIEMPO REAL -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  <div id="app-view" class="hidden min-h-screen">
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 hidden w-72 flex-col bg-slate-950 text-white lg:flex">
+      <div class="flex h-20 items-center gap-3 border-b border-white/10 px-6">
+        <div class="grid h-11 w-11 place-items-center rounded-2xl bg-blue-600 font-black">C</div>
+        <div><p class="font-extrabold">COLVEC ERP</p><p class="text-xs text-slate-400">Operaciones & Proyectos</p></div>
+      </div>
+      <nav id="desktop-nav" class="flex-1 space-y-1 overflow-y-auto p-4"></nav>
+      <div class="border-t border-white/10 p-4">
+        <div class="mb-3 rounded-xl bg-white/5 p-3"><p id="side-user" class="truncate text-sm font-bold"></p><p id="side-role" class="mt-1 text-xs text-slate-400"></p></div>
+        <button data-action="logout" class="w-full rounded-xl px-3 py-2 text-left text-sm font-bold text-red-300 hover:bg-red-500/10">Cerrar sesión</button>
+      </div>
+    </aside>
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyB80H5vQs7OrVdPNidN_h_68TweJH-P6rI",
-          authDomain: "colvec-operaciones.firebaseapp.com",
-          projectId: "colvec-operaciones",
-          storageBucket: "colvec-operaciones.appspot.com",
-          messagingSenderId: "745332416981",
-          appId: "1:745332416981:web:12cd58e3b448c9e7a6dd5c",
-          measurementId: "G-8T9CRMB851"
-        };
+    <div class="lg:pl-72">
+      <header class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6 lg:h-20 lg:px-8">
+        <div><p id="page-eyebrow" class="text-xs font-extrabold uppercase tracking-wider text-blue-600">Operaciones</p><h1 id="page-title" class="text-lg font-extrabold sm:text-xl">Resumen</h1></div>
+        <div class="flex items-center gap-3">
+          <span id="sync-status" class="hidden sm:inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700"><i class="h-2 w-2 rounded-full bg-emerald-500"></i> En línea</span>
+          <button id="install-btn" class="hidden rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold hover:bg-slate-50">Instalar app</button>
+          <button data-action="logout" class="lg:hidden rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold">Salir</button>
+        </div>
+      </header>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+      <main id="main-content" class="mx-auto max-w-[1600px] p-4 pb-28 sm:p-6 lg:p-8 lg:pb-8">
+        <section id="view-dashboard" data-view="dashboard" class="view space-y-6"></section>
+        <section id="view-assignments" data-view="assignments" class="view hidden space-y-6"></section>
+        <section id="view-logistics" data-view="logistics" class="view hidden space-y-6"></section>
+        <section id="view-field" data-view="field" class="view hidden space-y-6"></section>
+        <section id="view-reports" data-view="reports" class="view hidden space-y-6"></section>
+      </main>
 
-        let isRegistering = false;
+      <nav id="mobile-nav" class="fixed inset-x-0 bottom-0 z-50 grid border-t border-slate-200 bg-white px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,.08)] lg:hidden"></nav>
+    </div>
+  </div>
 
-        const authContainer = document.getElementById('auth-container');
-        const dashboardContainer = document.getElementById('dashboard-container');
-        const authForm = document.getElementById('auth-form');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const submitBtn = document.getElementById('submit-btn');
-        const toggleModeBtn = document.getElementById('toggle-mode');
-        const errorMsg = document.getElementById('error-msg');
-        const userEmailDisplay = document.getElementById('user-email-display');
-        const logoutBtn = document.getElementById('logout-btn');
+  <dialog id="modal" class="w-[calc(100%-2rem)] max-w-2xl rounded-2xl p-0 shadow-2xl backdrop:bg-slate-950/60">
+    <form method="dialog" class="border-b border-slate-200 p-4 sm:p-5 flex items-center justify-between"><h2 id="modal-title" class="text-lg font-extrabold"></h2><button class="grid h-9 w-9 place-items-center rounded-full bg-slate-100 font-bold" aria-label="Cerrar">×</button></form>
+    <div id="modal-body" class="max-h-[78vh] overflow-y-auto p-4 sm:p-6"></div>
+  </dialog>
 
-        // Navegación de Pestañas
-        window.cambiarSeccion = function(seccion) {
-            ['obras', 'gastos', 'activos', 'tareo', 'jefatura'].forEach(s => {
-                document.getElementById(`sec-${s}`).classList.add('hidden');
-                document.getElementById(`nav-${s}`).className = "flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-200 transition";
-            });
-            document.getElementById(`sec-${seccion}`).classList.remove('hidden');
-            document.getElementById(`nav-${seccion}`).className = "flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl bg-blue-600 text-white transition shadow-sm";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <script type="module">
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyB80H5vQs7OrVdPNidN_h_68TweJH-P6rI",
+  authDomain: "colvec-operaciones.firebaseapp.com",
+  projectId: "colvec-operaciones",
+  storageBucket: "colvec-operaciones.appspot.com",
+  messagingSenderId: "745332416981",
+  appId: "1:745332416981:web:12cd58e3b448c9e7a6dd5c",
+  measurementId: "G-8T9CRMB851"
+};
 
-        toggleModeBtn.addEventListener('click', () => {
-            isRegistering = !isRegistering;
-            submitBtn.textContent = isRegistering ? 'Crear Cuenta' : 'Iniciar Sesión';
-            toggleModeBtn.textContent = isRegistering ? '¿Ya tienes cuenta? Inicia Sesión' : '¿No tienes cuenta? Regístrate aquí';
-            errorMsg.classList.add('hidden');
-        });
+const ROLES = Object.freeze({
+  OWNER: "OWNER",
+  COORDINATOR: "COORDINATOR",
+  FIELD_ENGINEER: "FIELD_ENGINEER",
+  LOGISTICS: "LOGISTICS"
+});
 
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            errorMsg.classList.add('hidden');
-            try {
-                if (isRegistering) {
-                    await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-                } else {
-                    await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-                }
-            } catch (error) {
-                errorMsg.textContent = "Error: " + error.message;
-                errorMsg.classList.remove('hidden');
-            }
-        });
+const ROLE_LABELS = Object.freeze({
+  OWNER: "Gerencia / Dueño",
+  COORDINATOR: "Ingeniería encargada",
+  FIELD_ENGINEER: "Ingeniería de campo",
+  LOGISTICS: "Logística"
+});
 
-        logoutBtn.addEventListener('click', () => signOut(auth));
+const PROJECT_STATUS = Object.freeze({
+  APPROVED: "Aprobada",
+  ASSIGNED: "Asignada",
+  IN_PROGRESS: "En ejecución",
+  READY_TO_CLOSE: "Lista para cierre",
+  CLOSED: "Cerrada",
+  PAUSED: "Paralizada"
+});
 
-        let unsubObras = null, unsubGastos = null, unsubActivos = null, unsubTareo = null;
+const LOGISTICS_STATUS = Object.freeze({
+  NOT_REQUESTED: "Sin requerimiento",
+  REQUESTED: "Solicitado",
+  BUYING: "Comprando",
+  READY: "Listo para entrega",
+  DELIVERED: "Entregado",
+  RECEIVED: "Recepción confirmada"
+});
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                authContainer.classList.add('hidden');
-                dashboardContainer.classList.remove('hidden');
-                userEmailDisplay.textContent = user.email;
-                iniciarEscuchas();
-            } else {
-                dashboardContainer.classList.add('hidden');
-                authContainer.classList.remove('hidden');
-                emailInput.value = '';
-                passwordInput.value = '';
-                if (unsubObras) unsubObras();
-                if (unsubGastos) unsubGastos();
-                if (unsubActivos) unsubActivos();
-                if (unsubTareo) unsubTareo();
-            }
-        });
+const MONEY = new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" });
+const NUMBER = new Intl.NumberFormat("es-PE", { maximumFractionDigits: 1 });
 
-        // Formularios
-        document.getElementById('obra-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                await addDoc(collection(db, "obras_servicios"), {
-                    tipo: document.getElementById('obra-tipo').value,
-                    nombre: document.getElementById('obra-nombre').value,
-                    cliente: document.getElementById('obra-cliente').value,
-                    presupuesto: parseFloat(document.getElementById('obra-presupuesto').value),
-                    adelanto: parseFloat(document.getElementById('obra-adelanto').value),
-                    avance: parseInt(document.getElementById('obra-avance').value),
-                    estado: document.getElementById('obra-estado').value,
-                    fecha: new Date().toLocaleDateString()
-                });
-                e.target.reset();
-            } catch(err) { alert(err.message); }
-        });
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc,
+  updateDoc, query, where, orderBy, limit, serverTimestamp, runTransaction
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+const app = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-        document.getElementById('gasto-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                await addDoc(collection(db, "gastos"), {
-                    proveedor: document.getElementById('gas-proveedor').value,
-                    numero: document.getElementById('gas-num').value,
-                    monto: parseFloat(document.getElementById('gas-monto').value),
-                    descripcion: document.getElementById('gas-desc').value,
-                    estado: document.getElementById('gas-estado').value,
-                    fecha: new Date().toLocaleDateString()
-                });
-                e.target.reset();
-            } catch(err) { alert(err.message); }
-        });
 
-        document.getElementById('activo-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                await addDoc(collection(db, "activos"), {
-                    nombre: document.getElementById('act-nombre').value,
-                    serie: document.getElementById('act-serie').value,
-                    ubicacion: document.getElementById('act-ubicacion').value,
-                    estado: document.getElementById('act-estado').value,
-                    fecha: new Date().toLocaleDateString()
-                });
-                e.target.reset();
-            } catch(err) { alert(err.message); }
-        });
+const cleanText = (value, max = 180) => String(value ?? "").trim().replace(/\s+/g, " ").slice(0, max);
+const num = (value) => Number.isFinite(Number(value)) ? Number(value) : 0;
+const serviceToday = () => new Date().toISOString().slice(0, 10);
 
-        document.getElementById('tareo-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                await addDoc(collection(db, "tareo"), {
-                    personal: document.getElementById('tar-personal').value,
-                    proyecto: document.getElementById('tar-proyecto').value,
-                    fecha: document.getElementById('tar-fecha').value,
-                    horas: document.getElementById('tar-horas').value,
-                    estado: document.getElementById('tar-estado').value
-                });
-                e.target.reset();
-            } catch(err) { alert(err.message); }
-        });
+async function login(email, password) { return signInWithEmailAndPassword(auth, email.trim(), password); }
+async function logout() { return signOut(auth); }
 
-        window.eliminarReg = async function(col, id) {
-            if (confirm("¿Eliminar este registro?")) {
-                await deleteDoc(doc(db, col, id));
-            }
-        };
+async function getUserProfile(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
 
-        function iniciarEscuchas() {
-            // Escucha Obras (Visual Tarjetas Móviles)
-            unsubObras = onSnapshot(collection(db, "obras_servicios"), (snap) => {
-                let html = ""; let count = 0;
-                snap.forEach(d => {
-                    count++;
-                    let dat = d.data();
-                    html += `
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded">${dat.tipo}</span>
-                                <h3 class="font-bold text-slate-900 text-sm mt-1">${dat.nombre}</h3>
-                                <p class="text-xs text-slate-500">Cliente: ${dat.cliente}</p>
-                            </div>
-                            <button onclick="eliminarReg('obras_servicios', '${d.id}')" class="text-red-500 text-xs font-bold hover:underline">✕</button>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-xs bg-white p-2.5 rounded-lg border border-slate-100">
-                            <div>
-                                <span class="text-slate-400 block text-[10px]">Presupuesto:</span>
-                                <span class="font-bold text-slate-800">S/. ${dat.presupuesto.toFixed(2)}</span>
-                            </div>
-                            <div>
-                                <span class="text-slate-400 block text-[10px]">Adelanto:</span>
-                                <span class="font-bold text-blue-600">S/. ${dat.adelanto.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-center text-xs mb-1">
-                                <span class="font-bold text-slate-600">Avance: ${dat.avance}%</span>
-                                <span class="text-[10px] font-bold text-blue-800">${dat.estado}</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                                <div class="bg-blue-600 h-2 rounded-full" style="width: ${dat.avance}%"></div>
-                            </div>
-                        </div>
-                    </div>`;
-                });
-                if (count === 0) html = `<div class="text-center py-8 text-slate-400 text-xs">Sin obras o servicios registrados.</div>`;
-                document.getElementById('lista-obras').innerHTML = html;
-                document.getElementById('obra-count').textContent = `${count} reg.`;
-                document.getElementById('stat-obras').textContent = count;
-            });
+async function listUsers() {
+  const snap = await getDocs(query(collection(db, "users"), where("active", "==", true)));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
 
-            // Escucha Gastos
-            unsubGastos = onSnapshot(collection(db, "gastos"), (snap) => {
-                let html = ""; let count = 0; let total = 0;
-                snap.forEach(d => {
-                    count++;
-                    let dat = d.data();
-                    if(dat.estado === 'Aprobado') total += Number(dat.monto);
-                    html += `
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
-                        <div>
-                            <span class="font-bold text-slate-900 text-xs block">${dat.proveedor} (${dat.numero})</span>
-                            <span class="text-xs text-slate-500 block">${dat.descripcion}</span>
-                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded mt-1 inline-block">${dat.estado}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="font-black text-emerald-700 text-sm block">S/. ${dat.monto.toFixed(2)}</span>
-                            <button onclick="eliminarReg('gastos', '${d.id}')" class="text-red-500 text-xs font-bold hover:underline mt-1">✕</button>
-                        </div>
-                    </div>`;
-                });
-                if (count === 0) html = `<div class="text-center py-8 text-slate-400 text-xs">Sin gastos registrados.</div>`;
-                document.getElementById('lista-gastos').innerHTML = html;
-                document.getElementById('gas-total').textContent = `Total: S/. ${total.toFixed(2)}`;
-                document.getElementById('stat-gastos').textContent = `S/. ${total.toFixed(2)}`;
-            });
+async function listProjects(profile) {
+  let q = query(collection(db, "projects"), orderBy("createdAt", "desc"), limit(200));
+  if (profile.role === "FIELD_ENGINEER") q = query(collection(db, "projects"), where("fieldEngineerId", "==", profile.id), limit(100));
+  const snap = await getDocs(q);
+  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return rows.sort((a,b) => String(b.createdDate || "").localeCompare(String(a.createdDate || "")));
+}
 
-            // Escucha Activos
-            unsubActivos = onSnapshot(collection(db, "activos"), (snap) => {
-                let html = ""; let count = 0;
-                snap.forEach(d => {
-                    count++;
-                    let dat = d.data();
-                    html += `
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
-                        <div>
-                            <span class="font-bold text-slate-900 text-xs block">${dat.nombre} [${dat.serie}]</span>
-                            <span class="text-xs text-slate-500 block">Ubicación: ${dat.ubicacion}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-[10px] font-bold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded block">${dat.estado}</span>
-                            <button onclick="eliminarReg('activos', '${d.id}')" class="text-red-500 text-xs font-bold hover:underline mt-1">✕</button>
-                        </div>
-                    </div>`;
-                });
-                if (count === 0) html = `<div class="text-center py-8 text-slate-400 text-xs">Sin equipos registrados.</div>`;
-                document.getElementById('lista-activos').innerHTML = html;
-                document.getElementById('act-count').textContent = `${count} activos`;
-                document.getElementById('stat-activos').textContent = count;
-            });
+async function createProject(data, actor) {
+  const payload = {
+    code: cleanText(data.code, 30).toUpperCase(),
+    name: cleanText(data.name), client: cleanText(data.client), location: cleanText(data.location),
+    serviceType: cleanText(data.serviceType, 80), difficulty: cleanText(data.difficulty, 20),
+    budgetSale: num(data.budgetSale), programmedDays: Math.max(1, Math.round(num(data.programmedDays))),
+    laborHourRate: Math.max(0, num(data.laborHourRate)),
+    fieldEngineerId: cleanText(data.fieldEngineerId, 80), fieldEngineerName: cleanText(data.fieldEngineerName),
+    status: "ASSIGNED", logisticsStatus: "NOT_REQUESTED", progressPct: 0,
+    actualWorkDays: 0, actualWorkDates: [], laborHours: 0, laborCost: 0, materialsCost: 0, fieldExpenses: 0,
+    createdDate: serviceToday(), createdAt: serverTimestamp(), createdBy: actor.id,
+    assignedAt: serverTimestamp(), assignedBy: actor.id, updatedAt: serverTimestamp()
+  };
+  if (!payload.code || !payload.name || !payload.fieldEngineerId || payload.budgetSale <= 0) throw new Error("Completa código, obra, responsable y presupuesto.");
+  return addDoc(collection(db, "projects"), payload);
+}
 
-            // Escucha Tareo
-            unsubTareo = onSnapshot(collection(db, "tareo"), (snap) => {
-                let html = ""; let count = 0;
-                snap.forEach(d => {
-                    count++;
-                    let dat = d.data();
-                    html += `
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
-                        <div>
-                            <span class="font-bold text-slate-900 text-xs block">${dat.personal}</span>
-                            <span class="text-xs text-slate-500 block">Obra: ${dat.proyecto} (${dat.fecha})</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="font-bold text-amber-700 text-xs block">${dat.horas} hrs - ${dat.estado}</span>
-                            <button onclick="eliminarReg('tareo', '${d.id}')" class="text-red-500 text-xs font-bold hover:underline mt-1">✕</button>
-                        </div>
-                    </div>`;
-                });
-                if (count === 0) html = `<div class="text-center py-8 text-slate-400 text-xs">Sin registros de tareo.</div>`;
-                document.getElementById('lista-tareo').innerHTML = html;
-                document.getElementById('tar-count').textContent = `${count} tareos`;
-                document.getElementById('stat-tareo').textContent = count;
-            });
-        }
-    </script>
+async function listRequirements(projectId = null) {
+  let q = projectId
+    ? query(collection(db, `projects/${projectId}/requirements`), orderBy("createdAt", "desc"))
+    : query(collectionGroup(db, "requirements"), orderBy("createdAt", "desc"), limit(200));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, projectId: d.ref.parent.parent?.id, ...d.data() }));
+}
+
+async function createRequirement(project, data, actor) {
+  const items = (data.items || []).map(i => ({
+    itemName: cleanText(i.itemName, 100), category: cleanText(i.category, 30),
+    quantity: Math.max(0, num(i.quantity)), unit: cleanText(i.unit, 15),
+    estimatedUnitCost: Math.max(0, num(i.estimatedUnitCost)), actualUnitCost: 0,
+    lineEstimated: Math.max(0, num(i.quantity)) * Math.max(0, num(i.estimatedUnitCost))
+  })).filter(i => i.itemName && i.quantity > 0);
+  if (!items.length) throw new Error("Agrega al menos un material o EPP válido.");
+  const estimatedTotal = items.reduce((s,i) => s + i.lineEstimated, 0);
+  const reqRef = doc(collection(db, `projects/${project.id}/requirements`));
+  const projectRef = doc(db, "projects", project.id);
+  await runTransaction(db, async tx => {
+    tx.set(reqRef, {
+      projectId: project.id, projectCode: project.code, projectName: project.name,
+      requestedBy: actor.id, requestedByName: actor.displayName, requestedDate: serviceToday(),
+      neededDate: data.neededDate, notes: cleanText(data.notes, 400), items,
+      estimatedTotal, actualTotal: 0, status: "REQUESTED", createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    tx.update(projectRef, { logisticsStatus: "REQUESTED", updatedAt: serverTimestamp() });
+  });
+}
+
+async function updateRequirementStatus(req, status, actualTotal, actor) {
+  const reqRef = doc(db, `projects/${req.projectId}/requirements/${req.id}`);
+  const projectRef = doc(db, "projects", req.projectId);
+  await runTransaction(db, async tx => {
+    const projectSnap = await tx.get(projectRef);
+    if (!projectSnap.exists()) throw new Error("La obra ya no existe.");
+    const patch = { status, updatedAt: serverTimestamp(), updatedBy: actor.id };
+    if (status === "READY" || status === "DELIVERED") patch.actualTotal = Math.max(0, num(actualTotal));
+    tx.update(reqRef, patch);
+    tx.update(projectRef, {
+      logisticsStatus: status,
+      materialsCost: status === "DELIVERED" || status === "RECEIVED" ? Math.max(0, num(actualTotal || req.actualTotal)) : num(projectSnap.data().materialsCost),
+      updatedAt: serverTimestamp()
+    });
+  });
+}
+
+async function confirmReception(project, requirement, actor) {
+  if (requirement.status !== "DELIVERED") throw new Error("Logística debe marcar el requerimiento como entregado.");
+  const reqRef = doc(db, `projects/${project.id}/requirements/${requirement.id}`);
+  const projectRef = doc(db, "projects", project.id);
+  await runTransaction(db, async tx => {
+    tx.update(reqRef, { status: "RECEIVED", receivedBy: actor.id, receivedAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    tx.update(projectRef, { logisticsStatus: "RECEIVED", materialsCost: num(requirement.actualTotal), updatedAt: serverTimestamp() });
+  });
+}
+
+async function saveSafetyCheck(project, data, actor) {
+  if (project.logisticsStatus !== "RECEIVED") throw new Error("Primero debes confirmar la recepción de materiales y EPP.");
+  const date = data.date || serviceToday();
+  const checks = data.checks || {};
+  if (!Object.values(checks).every(Boolean)) throw new Error("Completa todos los controles SST obligatorios.");
+  await setDoc(doc(db, `projects/${project.id}/safetyChecks/${date}_${actor.id}`), {
+    projectId: project.id, date, engineerId: actor.id, engineerName: actor.displayName,
+    atsNumber: cleanText(data.atsNumber, 40), topic: cleanText(data.topic, 140),
+    checks, observations: cleanText(data.observations, 400), status: "COMPLETED",
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }, { merge: true });
+}
+
+async function safetyReady(projectId, date, uid) {
+  const snap = await getDoc(doc(db, `projects/${projectId}/safetyChecks/${date}_${uid}`));
+  return snap.exists() && snap.data().status === "COMPLETED";
+}
+
+async function createTimesheet(project, data, actor) {
+  const projectRef = doc(db, "projects", project.id);
+  const atsRef = doc(db, `projects/${project.id}/safetyChecks/${data.date}_${actor.id}`);
+  const entryRef = doc(collection(db, `projects/${project.id}/timesheets`));
+  await runTransaction(db, async tx => {
+    const [projectSnap, atsSnap] = await Promise.all([tx.get(projectRef), tx.get(atsRef)]);
+    if (!projectSnap.exists()) throw new Error("La obra no existe.");
+    const current = projectSnap.data();
+    if (current.logisticsStatus !== "RECEIVED") throw new Error("Bloqueado: falta confirmar logística.");
+    if (!atsSnap.exists() || atsSnap.data().status !== "COMPLETED") throw new Error("Bloqueado: registra el ATS y la charla antes del tareo.");
+    const hours = Math.max(0, num(data.hours));
+    const rate = Math.max(0, num(data.hourlyRate || current.laborHourRate));
+    tx.set(entryRef, {
+      projectId: project.id, projectCode: project.code, date: data.date,
+      workerId: cleanText(data.workerId, 40), workerName: cleanText(data.workerName),
+      documentNumber: cleanText(data.documentNumber, 15), trade: cleanText(data.trade, 60),
+      normalHours: Math.min(8, hours), overtimeHours: Math.max(0, hours - 8), hours,
+      hourlyRate: rate, laborCost: hours * rate, attendanceStatus: cleanText(data.attendanceStatus, 30),
+      registeredBy: actor.id, registeredAt: serverTimestamp()
+    });
+    const workDates = Array.isArray(current.actualWorkDates) ? current.actualWorkDates : [];
+    const isNewWorkDay = hours > 0 && !workDates.includes(data.date);
+    tx.update(projectRef, {
+      laborHours: num(current.laborHours) + hours,
+      laborCost: num(current.laborCost) + (hours * rate),
+      actualWorkDays: num(current.actualWorkDays) + (isNewWorkDay ? 1 : 0),
+      actualWorkDates: isNewWorkDay ? [...workDates, data.date].slice(-400) : workDates,
+      status: "IN_PROGRESS", updatedAt: serverTimestamp()
+    });
+  });
+}
+
+async function createExpense(project, data, actor, file = null) {
+  let receiptUrl = "";
+  if (file) receiptUrl = await uploadProjectFile(project.id, file, `expenses/${Date.now()}-${file.name}`);
+  const amount = Math.max(0, num(data.amount));
+  if (!data.category || !data.description || amount <= 0) throw new Error("Completa categoría, detalle y monto.");
+  await addDoc(collection(db, `projects/${project.id}/expenses`), {
+    projectId: project.id, projectCode: project.code, date: data.date, category: cleanText(data.category, 50),
+    supplier: cleanText(data.supplier), documentType: cleanText(data.documentType, 30), documentNumber: cleanText(data.documentNumber, 30),
+    description: cleanText(data.description, 300), amount, receiptUrl, status: "PENDING",
+    submittedBy: actor.id, submittedByName: actor.displayName, createdAt: serverTimestamp()
+  });
+}
+
+async function listExpenses(projectId = null) {
+  const q = projectId
+    ? query(collection(db, `projects/${projectId}/expenses`), orderBy("createdAt", "desc"))
+    : query(collectionGroup(db, "expenses"), orderBy("createdAt", "desc"), limit(300));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id:d.id, projectId:d.ref.parent.parent?.id, ...d.data() }));
+}
+
+async function approveExpense(expense, status, actor) {
+  const expenseRef = doc(db, `projects/${expense.projectId}/expenses/${expense.id}`);
+  const projectRef = doc(db, "projects", expense.projectId);
+  await runTransaction(db, async tx => {
+    const [expenseSnap, projectSnap] = await Promise.all([tx.get(expenseRef), tx.get(projectRef)]);
+    if (!expenseSnap.exists() || !projectSnap.exists()) throw new Error("Registro no disponible.");
+    const old = expenseSnap.data(); const project = projectSnap.data();
+    const before = old.status === "APPROVED" ? num(old.amount) : 0;
+    const after = status === "APPROVED" ? num(old.amount) : 0;
+    tx.update(expenseRef, { status, reviewedBy: actor.id, reviewedAt: serverTimestamp() });
+    tx.update(projectRef, { fieldExpenses: Math.max(0, num(project.fieldExpenses) - before + after), updatedAt: serverTimestamp() });
+  });
+}
+
+async function updateProgress(project, percent, notes, actor) {
+  const pct = Math.min(100, Math.max(num(project.progressPct), Math.round(num(percent))));
+  if (pct < num(project.progressPct)) throw new Error("El avance no puede retroceder.");
+  await addDoc(collection(db, `projects/${project.id}/progressLogs`), {
+    projectId: project.id, date: serviceToday(), percent: pct, previousPercent: num(project.progressPct),
+    notes: cleanText(notes, 400), registeredBy: actor.id, registeredByName: actor.displayName, createdAt: serverTimestamp()
+  });
+  await updateDoc(doc(db, "projects", project.id), { progressPct: pct, status: pct === 100 ? "READY_TO_CLOSE" : "IN_PROGRESS", updatedAt: serverTimestamp() });
+}
+
+async function uploadProjectFile(projectId, file, path) {
+  if (file.size > 8 * 1024 * 1024) throw new Error("Cada archivo debe pesar menos de 8 MB.");
+  const fileRef = ref(storage, `projects/${projectId}/${path}`);
+  await uploadBytes(fileRef, file, { contentType: file.type });
+  return getDownloadURL(fileRef);
+}
+
+async function closeProject(project, data, actor, photoFiles = []) {
+  if (num(project.progressPct) < 100) throw new Error("La obra debe tener 100% de avance.");
+  const photoUrls = [];
+  for (const file of [...photoFiles].slice(0, 6)) photoUrls.push(await uploadProjectFile(project.id, file, `closures/${Date.now()}-${file.name}`));
+  const closureRef = doc(collection(db, `projects/${project.id}/closures`));
+  await setDoc(closureRef, {
+    projectId: project.id, projectCode: project.code, clientName: cleanText(data.clientName),
+    clientDocument: cleanText(data.clientDocument, 20), clientPosition: cleanText(data.clientPosition, 80),
+    measurements: [{ type: cleanText(data.measurementType, 60), value: num(data.measurementValue), unit: cleanText(data.measurementUnit, 15) }],
+    observations: cleanText(data.observations, 500), photoUrls, signatureDataUrl: data.signatureDataUrl,
+    conformityAccepted: true, closedBy: actor.id, closedByName: actor.displayName, closedAt: serverTimestamp(), closedDate: serviceToday()
+  });
+  await updateDoc(doc(db, "projects", project.id), { status: "CLOSED", closedDate: serviceToday(), closedAt: serverTimestamp(), updatedAt: serverTimestamp() });
+}
+
+async function projectDetails(projectId) {
+  const [reqs, expenses, times, safety, progress, closures] = await Promise.all([
+    getDocs(query(collection(db, `projects/${projectId}/requirements`), orderBy("createdAt", "desc"))),
+    getDocs(query(collection(db, `projects/${projectId}/expenses`), orderBy("createdAt", "desc"))),
+    getDocs(query(collection(db, `projects/${projectId}/timesheets`), orderBy("date", "desc"))),
+    getDocs(query(collection(db, `projects/${projectId}/safetyChecks`), orderBy("date", "desc"))),
+    getDocs(query(collection(db, `projects/${projectId}/progressLogs`), orderBy("createdAt", "desc"))),
+    getDocs(query(collection(db, `projects/${projectId}/closures`), orderBy("closedAt", "desc")))
+  ]);
+  const map = s => s.docs.map(d => ({ id:d.id,...d.data() }));
+  return { requirements:map(reqs), expenses:map(expenses), timesheets:map(times), safetyChecks:map(safety), progressLogs:map(progress), closures:map(closures) };
+}
+
+const safe = value => String(value ?? "—");
+const reportNet = p => Number(p.budgetSale || 0) - Number(p.materialsCost || 0) - Number(p.laborCost || 0) - Number(p.fieldExpenses || 0);
+
+function heading(doc, title, subtitle) {
+  doc.setFillColor(15, 23, 42); doc.rect(0, 0, 210, 32, "F");
+  doc.setTextColor(255,255,255); doc.setFontSize(16); doc.setFont("helvetica","bold"); doc.text("COLVEC C&M S.A.C.", 14, 14);
+  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.text("Gestión de Obras y Operaciones", 14, 21);
+  doc.setTextColor(15,23,42); doc.setFontSize(15); doc.setFont("helvetica","bold"); doc.text(title, 14, 44);
+  doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(100,116,139); doc.text(subtitle, 14, 50);
+}
+
+function exportManagementPdf(projects, charts = {}) {
+  const { jsPDF } = window.jspdf; const doc = new jsPDF({ unit:"mm", format:"a4" });
+  heading(doc, "Reporte ejecutivo de operaciones", `Generado: ${new Date().toLocaleString("es-PE")}`);
+  const totalSale = projects.reduce((s,p)=>s+Number(p.budgetSale||0),0);
+  const totalCost = projects.reduce((s,p)=>s+Number(p.materialsCost||0)+Number(p.laborCost||0)+Number(p.fieldExpenses||0),0);
+  doc.autoTable({ startY:56, theme:"grid", styles:{fontSize:8}, head:[["Obras","Venta","Costos","Rentabilidad neta"]], body:[[
+    projects.length, MONEY.format(totalSale), MONEY.format(totalCost), MONEY.format(totalSale-totalCost)
+  ]], headStyles:{fillColor:[37,99,235]} });
+  let y = doc.lastAutoTable.finalY + 7;
+  if (charts.efficiency) { doc.addImage(charts.efficiency,"PNG",14,y,86,43); }
+  if (charts.workload) { doc.addImage(charts.workload,"PNG",108,y,86,43); }
+  y += charts.efficiency || charts.workload ? 49 : 0;
+  doc.autoTable({ startY:y, theme:"striped", styles:{fontSize:7.2,cellPadding:2}, head:[["Código","Proyecto","Responsable","Estado","Avance","Días P/R","Venta","Costo","Neto"]], body:projects.map(p=>[
+    safe(p.code),safe(p.name),safe(p.fieldEngineerName),PROJECT_STATUS[p.status]||p.status,`${Number(p.progressPct||0)}%`,
+    `${Number(p.programmedDays||0)} / ${NUMBER.format(p.actualWorkDays||0)}`,MONEY.format(p.budgetSale||0),
+    MONEY.format(Number(p.materialsCost||0)+Number(p.laborCost||0)+Number(p.fieldExpenses||0)),MONEY.format(reportNet(p))
+  ]), headStyles:{fillColor:[15,23,42]}, margin:{left:8,right:8} });
+  const pages=doc.internal.getNumberOfPages(); for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setFontSize(7);doc.setTextColor(100);doc.text(`Página ${i} de ${pages}`,196,290,{align:"right"}); }
+  doc.save(`COLVEC-reporte-gerencial-${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+function exportProjectPdf(project, detail) {
+  const { jsPDF } = window.jspdf; const doc = new jsPDF({ unit:"mm", format:"a4" });
+  heading(doc, `Informe de obra ${safe(project.code)}`, `${safe(project.name)} · ${safe(project.client)}`);
+  doc.autoTable({ startY:56, theme:"plain", styles:{fontSize:8,cellPadding:2}, body:[
+    ["Responsable",safe(project.fieldEngineerName),"Ubicación",safe(project.location)],
+    ["Estado",PROJECT_STATUS[project.status]||project.status,"Logística",LOGISTICS_STATUS[project.logisticsStatus]||project.logisticsStatus],
+    ["Días programados",safe(project.programmedDays),"Días reales",NUMBER.format(project.actualWorkDays||0)],
+    ["Avance",`${project.progressPct||0}%`,"Presupuesto",MONEY.format(project.budgetSale||0)]
+  ]});
+  let y=doc.lastAutoTable.finalY+5;
+  doc.autoTable({startY:y,theme:"grid",head:[["Materiales","Mano de obra","Gastos campo","Costo total","Rentabilidad neta"]],body:[[
+    MONEY.format(project.materialsCost||0),MONEY.format(project.laborCost||0),MONEY.format(project.fieldExpenses||0),
+    MONEY.format(Number(project.materialsCost||0)+Number(project.laborCost||0)+Number(project.fieldExpenses||0)),MONEY.format(net(project))
+  ]],headStyles:{fillColor:[37,99,235]},styles:{fontSize:8}}); y=doc.lastAutoTable.finalY+7;
+  if(detail.timesheets.length){doc.setFontSize(11);doc.setFont("helvetica","bold");doc.text("Tareo",14,y);doc.autoTable({startY:y+3,head:[["Fecha","Trabajador","Oficio","Horas","Costo"]],body:detail.timesheets.map(t=>[t.date,t.workerName,t.trade,t.hours,MONEY.format(t.laborCost||0)]),styles:{fontSize:7.5},headStyles:{fillColor:[15,23,42]}});y=doc.lastAutoTable.finalY+7;}
+  if(detail.expenses.length){doc.setFontSize(11);doc.setFont("helvetica","bold");doc.text("Gastos de campo",14,y);doc.autoTable({startY:y+3,head:[["Fecha","Categoría","Detalle","Estado","Monto"]],body:detail.expenses.map(e=>[e.date,e.category,e.description,e.status,MONEY.format(e.amount||0)]),styles:{fontSize:7.5},headStyles:{fillColor:[15,23,42]}});}
+  doc.save(`COLVEC-${project.code || project.id}-${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+const $ = (s, root=document) => root.querySelector(s);
+const queryAll = (s, root=document) => [...root.querySelectorAll(s)];
+const today = () => new Date().toISOString().slice(0,10);
+const esc = v => String(v ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+const n = v => Number(v || 0);
+const net = p => n(p.budgetSale)-n(p.materialsCost)-n(p.laborCost)-n(p.fieldExpenses);
+
+const state = { profile:null, users:[], projects:[], requirements:[], expenses:[], activeView:"dashboard", charts:{}, installPrompt:null };
+
+const NAV = [
+  { id:"dashboard", label:"Resumen", icon:"▦", roles:Object.values(ROLES) },
+  { id:"assignments", label:"Asignación", icon:"◆", roles:[ROLES.OWNER,ROLES.COORDINATOR] },
+  { id:"logistics", label:"Logística", icon:"▣", roles:[ROLES.OWNER,ROLES.LOGISTICS,ROLES.FIELD_ENGINEER] },
+  { id:"field", label:"Campo", icon:"✓", roles:[ROLES.OWNER,ROLES.FIELD_ENGINEER] },
+  { id:"reports", label:"Reportes", icon:"↗", roles:[ROLES.OWNER] }
+];
+
+function toast(message, type="ok") { const el=$("#toast"); el.textContent=message; el.className=`fixed right-4 top-4 z-[100] max-w-sm rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-2xl ${type==="error"?"bg-red-600":"bg-slate-900"}`; setTimeout(()=>el.classList.add("hidden"),3500); }
+function statusBadge(value, map=PROJECT_STATUS) { const label=map[value]||value||"—"; const green=["CLOSED","RECEIVED","DELIVERED","READY","APPROVED"].includes(value); const amber=["REQUESTED","BUYING","PENDING","READY_TO_CLOSE"].includes(value); const red=["REJECTED","PAUSED"].includes(value); return `<span class="status ${green?'status-green':amber?'status-amber':red?'status-red':'status-blue'}">${esc(label)}</span>`; }
+function empty(title, text) { return `<div class="py-12 text-center"><div class="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-slate-100 text-xl text-slate-400">◇</div><p class="font-extrabold text-slate-700">${title}</p><p class="mt-1 text-sm text-slate-500">${text}</p></div>`; }
+function openModal(title, html) { $("#modal-title").textContent=title; $("#modal-body").innerHTML=html; $("#modal").showModal(); }
+function closeModal(){ $("#modal").close(); }
+function projectById(id){ return state.projects.find(p=>p.id===id); }
+
+function renderNav(){
+  const allowed=NAV.filter(x=>x.roles.includes(state.profile.role));
+  $("#desktop-nav").innerHTML=allowed.map(x=>`<button class="nav-link w-full ${x.id===state.activeView?'active':''}" data-nav="${x.id}"><span class="text-lg">${x.icon}</span>${x.label}</button>`).join("");
+  $("#mobile-nav").style.gridTemplateColumns=`repeat(${allowed.length},minmax(0,1fr))`;
+  $("#mobile-nav").innerHTML=allowed.map(x=>`<button class="mobile-link ${x.id===state.activeView?'active':''}" data-nav="${x.id}"><span class="text-lg leading-none">${x.icon}</span><span class="truncate">${x.label}</span></button>`).join("");
+}
+
+async function refreshData(){
+  [state.projects,state.requirements,state.expenses]=await Promise.all([
+    listProjects(state.profile),
+    state.profile.role===ROLES.FIELD_ENGINEER ? Promise.resolve([]) : listRequirements().catch(()=>[]),
+    [ROLES.OWNER,ROLES.COORDINATOR,ROLES.LOGISTICS].includes(state.profile.role) ? listExpenses().catch(()=>[]) : Promise.resolve([])
+  ]);
+  renderCurrent();
+}
+
+function setView(id){
+  state.activeView=id; queryAll(".view").forEach(v=>v.classList.toggle("hidden",v.dataset.view!==id));
+  const item=NAV.find(x=>x.id===id); $("#page-title").textContent=item?.label||"Operaciones";
+  $("#page-eyebrow").textContent=id==="reports"?"Inteligencia gerencial":"Operaciones"; renderNav(); renderCurrent(); window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function destroyCharts(){ Object.values(state.charts).forEach(c=>c?.destroy?.()); state.charts={}; }
+function renderCurrent(){
+  destroyCharts();
+  if(state.activeView==="dashboard") renderDashboard();
+  if(state.activeView==="assignments") renderAssignments();
+  if(state.activeView==="logistics") renderLogistics();
+  if(state.activeView==="field") renderField();
+  if(state.activeView==="reports") renderReports();
+}
+
+function renderDashboard(){
+  const active=state.projects.filter(p=>!["CLOSED","PAUSED"].includes(p.status));
+  const sale=state.projects.reduce((s,p)=>s+n(p.budgetSale),0); const totalNet=state.projects.reduce((s,p)=>s+net(p),0);
+  const efficiency=state.projects.filter(p=>n(p.actualWorkDays)>0).reduce((s,p)=>s+(n(p.programmedDays)/n(p.actualWorkDays))*100,0)/Math.max(1,state.projects.filter(p=>n(p.actualWorkDays)>0).length);
+  const pending=state.requirements.filter(r=>!["RECEIVED"].includes(r.status)).length;
+  $("#view-dashboard").innerHTML=`
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h2 class="text-2xl font-extrabold">Control de operaciones</h2><p class="mt-1 text-sm text-slate-500">Información consolidada al ${new Date().toLocaleDateString("es-PE")}</p></div><button class="btn-secondary no-print" data-action="refresh">Actualizar datos</button></div>
+    <div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <article class="card kpi text-blue-700"><p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Obras activas</p><p class="mt-2 text-3xl font-extrabold text-slate-950">${active.length}</p><p class="mt-1 text-xs text-slate-500">de ${state.projects.length} registradas</p></article>
+      <article class="card kpi text-emerald-600"><p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Venta contratada</p><p class="mt-2 text-2xl font-extrabold text-slate-950">${MONEY.format(sale)}</p><p class="mt-1 text-xs text-slate-500">presupuesto acumulado</p></article>
+      <article class="card kpi ${totalNet>=0?'text-emerald-600':'text-red-600'}"><p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Rentabilidad neta</p><p class="mt-2 text-2xl font-extrabold text-slate-950">${MONEY.format(totalNet)}</p><p class="mt-1 text-xs text-slate-500">antes de impuestos</p></article>
+      <article class="card kpi text-amber-600"><p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Eficiencia de plazo</p><p class="mt-2 text-3xl font-extrabold text-slate-950">${NUMBER.format(efficiency||0)}%</p><p class="mt-1 text-xs text-slate-500">${pending} requerimientos en flujo</p></article>
+    </div>
+    <div class="grid gap-4 xl:grid-cols-[1.3fr_.7fr]">
+      <article class="card p-4 sm:p-5"><div class="mb-4"><h3 class="font-extrabold">Avance de obras activas</h3><p class="text-xs text-slate-500">Porcentaje informado por campo</p></div><div class="h-72"><canvas id="progress-chart"></canvas></div></article>
+      <article class="card p-4 sm:p-5"><h3 class="font-extrabold">Alertas de gestión</h3><div class="mt-4 space-y-3">${alertsHtml()}</div></article>
+    </div>
+    <article class="card overflow-hidden"><div class="border-b border-slate-200 p-4 sm:p-5"><h3 class="font-extrabold">Últimas obras</h3></div>${projectsTable(state.projects.slice(0,8))}</article>`;
+  const ctx=$("#progress-chart"); if(ctx) state.charts.progress=new Chart(ctx,{type:"bar",data:{labels:active.slice(0,8).map(p=>p.code||p.name),datasets:[{label:"Avance %",data:active.slice(0,8).map(p=>n(p.progressPct)),backgroundColor:"#2563eb",borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100}}}});
+}
+
+function alertsHtml(){
+  const alerts=[];
+  state.projects.forEach(p=>{ if(n(p.actualWorkDays)>n(p.programmedDays)) alerts.push(`<div class="rounded-xl bg-red-50 p-3"><p class="text-sm font-bold text-red-800">${esc(p.code)} excede el plazo</p><p class="text-xs text-red-600">${NUMBER.format(p.actualWorkDays)} días reales vs ${p.programmedDays} programados.</p></div>`); if(net(p)<0) alerts.push(`<div class="rounded-xl bg-amber-50 p-3"><p class="text-sm font-bold text-amber-800">${esc(p.code)} con margen negativo</p><p class="text-xs text-amber-700">Resultado actual: ${MONEY.format(net(p))}.</p></div>`); });
+  return alerts.slice(0,5).join("")||`<div class="rounded-xl bg-emerald-50 p-3 text-sm font-bold text-emerald-700">Sin alertas críticas con los datos actuales.</div>`;
+}
+function projectsTable(rows){ if(!rows.length)return empty("Sin obras","Crea la primera asignación para iniciar el flujo."); return `<div class="table-wrap"><table><thead><tr><th>Obra</th><th>Responsable</th><th>Estado</th><th>Avance</th><th>Plazo P/R</th><th>Rentabilidad</th><th></th></tr></thead><tbody>${rows.map(p=>`<tr><td><b>${esc(p.code)}</b><br><span class="text-slate-500">${esc(p.name)}</span></td><td>${esc(p.fieldEngineerName)}</td><td>${statusBadge(p.status)}</td><td><b>${n(p.progressPct)}%</b></td><td>${n(p.programmedDays)} / ${NUMBER.format(p.actualWorkDays)}</td><td class="font-bold ${net(p)<0?'text-red-600':'text-emerald-700'}">${MONEY.format(net(p))}</td><td><button class="font-bold text-blue-700" data-action="project-detail" data-id="${p.id}">Ver</button></td></tr>`).join("")}</tbody></table></div>`; }
+
+function renderAssignments(){
+  const engineers=state.users.filter(u=>u.role===ROLES.FIELD_ENGINEER);
+  $("#view-assignments").innerHTML=`<div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h2 class="text-2xl font-extrabold">Bandeja de asignación</h2><p class="mt-1 text-sm text-slate-500">Carga, disponibilidad y obras asignadas por ingeniero.</p></div><button class="btn-primary" data-action="new-project">+ Nueva obra</button></div>
+  <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">${engineers.map(u=>{const works=state.projects.filter(p=>p.fieldEngineerId===u.id&&!['CLOSED','PAUSED'].includes(p.status));return `<article class="card p-4"><div class="flex items-center gap-3"><div class="grid h-10 w-10 place-items-center rounded-full bg-blue-100 font-extrabold text-blue-700">${esc((u.displayName||'?')[0])}</div><div class="min-w-0"><p class="truncate font-extrabold">${esc(u.displayName)}</p><p class="text-xs text-slate-500">${works.length?`${works.length} obra(s) activa(s)`:'Disponible'}</p></div></div><div class="mt-4 h-2 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full ${works.length>=3?'bg-red-500':works.length===2?'bg-amber-500':'bg-emerald-500'}" style="width:${Math.min(100,works.length*33)}%"></div></div></article>`;}).join("")||`<div class="sm:col-span-2 xl:col-span-4">${empty("Sin ingenieros activos","Crea perfiles FIELD_ENGINEER en la colección users.")}</div>`}</div><article class="card overflow-hidden">${projectsTable(state.projects)}</article>`;
+}
+
+function renderLogistics(){
+  const rows=state.requirements;
+  $("#view-logistics").innerHTML=`<div><h2 class="text-2xl font-extrabold">Requerimientos y entrega</h2><p class="mt-1 text-sm text-slate-500">Trazabilidad de materiales y EPP desde solicitud hasta recepción.</p></div><div class="grid gap-3 sm:grid-cols-3">${["REQUESTED","BUYING","DELIVERED"].map(s=>`<article class="card p-4"><p class="text-xs font-extrabold uppercase text-slate-500">${LOGISTICS_STATUS[s]}</p><p class="mt-2 text-3xl font-extrabold">${rows.filter(r=>r.status===s).length}</p></article>`).join("")}</div><article class="card overflow-hidden">${!rows.length?empty("Sin requerimientos","Los requerimientos creados por campo aparecerán aquí."):`<div class="table-wrap"><table><thead><tr><th>Obra</th><th>Solicitante</th><th>Necesario</th><th>Ítems</th><th>Costo</th><th>Estado</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${esc(r.projectCode)}</b><br><span class="text-slate-500">${esc(r.projectName)}</span></td><td>${esc(r.requestedByName)}</td><td>${esc(r.neededDate)}</td><td>${r.items?.length||0}</td><td>${MONEY.format(r.actualTotal||r.estimatedTotal||0)}</td><td>${statusBadge(r.status,LOGISTICS_STATUS)}</td><td><button class="font-bold text-blue-700" data-action="requirement" data-id="${r.id}">Gestionar</button></td></tr>`).join("")}</tbody></table></div>`}</article>`;
+}
+
+function workflow(project){ const log=project.logisticsStatus==="RECEIVED"; const active=["IN_PROGRESS","READY_TO_CLOSE","CLOSED"].includes(project.status); const closed=project.status==="CLOSED"; return `<div class="mt-4 flex items-center"><span class="grid h-7 w-7 place-items-center rounded-full ${log?'bg-emerald-500 text-white':'bg-slate-200'} text-xs font-black">1</span><i class="step-line ${log?'done':''}"></i><span class="grid h-7 w-7 place-items-center rounded-full ${active?'bg-emerald-500 text-white':'bg-slate-200'} text-xs font-black">2</span><i class="step-line ${closed?'done':''}"></i><span class="grid h-7 w-7 place-items-center rounded-full ${closed?'bg-emerald-500 text-white':'bg-slate-200'} text-xs font-black">3</span></div><div class="mt-1 grid grid-cols-3 text-[10px] font-bold text-slate-500"><span>Logística</span><span class="text-center">Ejecución</span><span class="text-right">Cierre</span></div>`; }
+function renderField(){
+  const works=state.projects.filter(p=>p.status!=="CLOSED");
+  $("#view-field").innerHTML=`<div><h2 class="text-2xl font-extrabold">Operación en campo</h2><p class="mt-1 text-sm text-slate-500">Flujo obligatorio: logística → ATS → tareo y avance → conformidad.</p></div><div class="grid gap-4 xl:grid-cols-2">${works.map(p=>`<article class="card p-4 sm:p-5"><div class="flex items-start justify-between gap-3"><div><p class="text-xs font-extrabold uppercase text-blue-600">${esc(p.code)}</p><h3 class="mt-1 font-extrabold">${esc(p.name)}</h3><p class="mt-1 text-sm text-slate-500">${esc(p.client)} · ${esc(p.location)}</p></div>${statusBadge(p.status)}</div>${workflow(p)}<div class="mt-5 grid grid-cols-2 gap-2"><button class="btn-secondary" data-action="field-logistics" data-id="${p.id}">${p.logisticsStatus==="RECEIVED"?'Logística ✓':'Requerimiento'}</button><button class="btn-secondary" data-action="ats" data-id="${p.id}" ${p.logisticsStatus!=="RECEIVED"?'disabled':''}>ATS / SST</button><button class="btn-secondary" data-action="timesheet" data-id="${p.id}" ${p.logisticsStatus!=="RECEIVED"?'disabled':''}>Tareo</button><button class="btn-secondary" data-action="expense" data-id="${p.id}">Rendir gasto</button><button class="btn-secondary" data-action="progress" data-id="${p.id}">Avance ${n(p.progressPct)}%</button><button class="btn-primary" data-action="closure" data-id="${p.id}" ${n(p.progressPct)<100?'disabled':''}>Cerrar obra</button></div></article>`).join("")||`<div class="xl:col-span-2 card">${empty("Sin obras asignadas","Cuando se asigne una obra aparecerá en esta bandeja.")}</div>`}</div>`;
+}
+
+function renderReports(){
+  const totalCost=state.projects.reduce((s,p)=>s+n(p.materialsCost)+n(p.laborCost)+n(p.fieldExpenses),0);
+  const pendingExpenses=state.expenses.filter(e=>e.status==="PENDING");
+  $("#view-reports").innerHTML=`<div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h2 class="text-2xl font-extrabold">Indicadores gerenciales</h2><p class="mt-1 text-sm text-slate-500">Plazos, rentabilidad y carga laboral calculados desde registros operativos.</p></div><button class="btn-primary" data-action="management-pdf">Descargar reporte PDF</button></div><div class="grid gap-4 lg:grid-cols-2"><article class="card p-4 sm:p-5"><h3 class="font-extrabold">Eficiencia: días programados vs reales</h3><div class="mt-4 h-72"><canvas id="efficiency-chart"></canvas></div></article><article class="card p-4 sm:p-5"><h3 class="font-extrabold">Carga laboral por ingeniero</h3><div class="mt-4 h-72"><canvas id="workload-chart"></canvas></div></article></div>${pendingExpenses.length?`<article class="card overflow-hidden"><div class="border-b border-slate-200 p-4 sm:p-5"><h3 class="font-extrabold">Gastos pendientes de aprobación</h3></div><div class="table-wrap"><table><thead><tr><th>Obra</th><th>Responsable</th><th>Detalle</th><th>Monto</th><th>Acción</th></tr></thead><tbody>${pendingExpenses.map(e=>`<tr><td>${esc(e.projectCode)}</td><td>${esc(e.submittedByName)}</td><td>${esc(e.description)}</td><td><b>${MONEY.format(e.amount)}</b></td><td class="space-x-2"><button class="font-bold text-emerald-700" data-action="expense-review" data-id="${e.id}" data-status="APPROVED">Aprobar</button><button class="font-bold text-red-700" data-action="expense-review" data-id="${e.id}" data-status="REJECTED">Rechazar</button></td></tr>`).join("")}</tbody></table></div></article>`:""}<article class="card p-4 sm:p-5"><div class="flex items-center justify-between"><div><h3 class="font-extrabold">Resultado económico</h3><p class="text-xs text-slate-500">Costo acumulado: ${MONEY.format(totalCost)}</p></div></div><div class="mt-4">${projectsTable(state.projects)}</div></article>`;
+  const labels=state.projects.slice(0,12).map(p=>p.code||p.name);
+  state.charts.efficiency=new Chart($("#efficiency-chart"),{type:"bar",data:{labels,datasets:[{label:"Programados",data:state.projects.slice(0,12).map(p=>n(p.programmedDays)),backgroundColor:"#94a3b8",borderRadius:5},{label:"Reales",data:state.projects.slice(0,12).map(p=>n(p.actualWorkDays)),backgroundColor:"#2563eb",borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false}});
+  const grouped={}; state.projects.forEach(p=>{const key=p.fieldEngineerName||"Sin asignar"; grouped[key]=(grouped[key]||0)+n(p.actualWorkDays);});
+  state.charts.workload=new Chart($("#workload-chart"),{type:"doughnut",data:{labels:Object.keys(grouped),datasets:[{data:Object.values(grouped),backgroundColor:["#2563eb","#0f766e","#d97706","#7c3aed","#dc2626","#0891b2"]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"}}}});
+}
+
+function newProjectModal(){ const engineers=state.users.filter(u=>u.role===ROLES.FIELD_ENGINEER); openModal("Crear y asignar obra",`<form id="project-form" class="space-y-4"><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Código único</span><input name="code" required placeholder="OB-2026-001"></label><label class="field"><span>Tipo de servicio</span><select name="serviceType"><option>Obra electromecánica</option><option>Mantenimiento</option><option>Expediente técnico</option><option>Medición / protocolo</option></select></label></div><label class="field"><span>Nombre del proyecto</span><input name="name" required></label><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Cliente</span><input name="client" required></label><label class="field"><span>Ubicación</span><input name="location" required></label></div><div class="grid gap-4 sm:grid-cols-3"><label class="field"><span>Presupuesto venta S/</span><input name="budgetSale" type="number" step=".01" min="1" required></label><label class="field"><span>Días programados</span><input name="programmedDays" type="number" min="1" required></label><label class="field"><span>Costo hora base S/</span><input name="laborHourRate" type="number" step=".01" min="0" required></label></div><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Dificultad</span><select name="difficulty"><option>Baja</option><option selected>Media</option><option>Alta</option><option>Crítica</option></select></label><label class="field"><span>Ingeniero de campo</span><select name="fieldEngineerId" required><option value="">Seleccionar…</option>${engineers.map(u=>`<option value="${u.id}" data-name="${esc(u.displayName)}">${esc(u.displayName)}</option>`).join("")}</select></label></div><button class="btn-primary w-full">Crear y asignar</button></form>`); }
+
+function requirementModal(project){ openModal(`Requerimiento · ${project.code}`,`<form id="requirement-form" data-project="${project.id}" class="space-y-4"><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Fecha necesaria</span><input name="neededDate" type="date" min="${today()}" value="${today()}" required></label><label class="field"><span>Observaciones</span><input name="notes" placeholder="Entrega en obra, marcas permitidas…"></label></div><div><div class="mb-2 flex items-center justify-between"><b class="text-sm">Materiales y EPP</b><button type="button" class="text-sm font-bold text-blue-700" data-action="add-item">+ Agregar ítem</button></div><div id="items" class="space-y-2">${itemRow()}</div></div><button class="btn-primary w-full">Enviar a Logística</button></form>`); }
+function itemRow(){ return `<div class="item-row grid grid-cols-[1fr_70px_70px] gap-2 sm:grid-cols-[1fr_100px_90px_110px]"><input class="rounded-xl border border-slate-300 px-3 py-2 text-sm" name="itemName" placeholder="Descripción" required><input class="rounded-xl border border-slate-300 px-2 py-2 text-sm" name="quantity" type="number" min=".01" step=".01" placeholder="Cant." required><input class="rounded-xl border border-slate-300 px-2 py-2 text-sm" name="unit" placeholder="Und." required><input class="hidden rounded-xl border border-slate-300 px-2 py-2 text-sm sm:block" name="estimatedUnitCost" type="number" min="0" step=".01" placeholder="Costo est."><input type="hidden" name="category" value="MATERIAL"></div>`; }
+
+function logisticsModal(req){ const canManage=[ROLES.OWNER,ROLES.LOGISTICS].includes(state.profile.role); const project=projectById(req.projectId); openModal(`Logística · ${req.projectCode}`,`<div class="space-y-4"><div class="rounded-xl bg-slate-50 p-4"><div class="flex justify-between gap-3"><div><b>${esc(req.projectName)}</b><p class="text-sm text-slate-500">Necesario: ${esc(req.neededDate)}</p></div>${statusBadge(req.status,LOGISTICS_STATUS)}</div></div><div class="space-y-2">${(req.items||[]).map(i=>`<div class="flex justify-between border-b border-slate-100 py-2 text-sm"><span>${esc(i.itemName)} · ${i.quantity} ${esc(i.unit)}</span><b>${MONEY.format(i.lineEstimated||0)}</b></div>`).join("")}</div>${canManage?`<form id="logistics-status-form" data-id="${req.id}" class="space-y-3"><label class="field"><span>Nuevo estado</span><select name="status"><option value="BUYING">Comprando</option><option value="READY">Listo para entrega</option><option value="DELIVERED">Entregado</option></select></label><label class="field"><span>Costo real total S/</span><input name="actualTotal" type="number" min="0" step=".01" value="${n(req.actualTotal||req.estimatedTotal)}"></label><button class="btn-primary w-full">Actualizar logística</button></form>`:""}${state.profile.role===ROLES.FIELD_ENGINEER&&req.status==="DELIVERED"?`<button class="btn-primary w-full" data-action="confirm-reception" data-req="${req.id}" data-project="${project?.id}">Confirmar recepción conforme</button>`:""}</div>`); }
+
+function atsModal(project){ openModal(`ATS y charla · ${project.code}`,`<form id="ats-form" data-project="${project.id}" class="space-y-4"><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Fecha</span><input name="date" type="date" value="${today()}" required></label><label class="field"><span>N.º ATS</span><input name="atsNumber" required></label></div><label class="field"><span>Tema de la charla</span><input name="topic" required></label><div class="rounded-xl bg-amber-50 p-4"><p class="mb-3 text-sm font-extrabold text-amber-900">Verificación obligatoria</p>${[["ppe","EPP completo y verificado"],["tools","Herramientas inspeccionadas"],["risks","Peligros y controles comunicados"],["signatures","Cuadrilla participó en la charla"]].map(([k,l])=>`<label class="mb-3 flex items-start gap-3 text-sm"><input class="mt-1 h-4 w-4" type="checkbox" name="${k}" required><span>${l}</span></label>`).join("")}</div><label class="field"><span>Observaciones</span><textarea name="observations" rows="2"></textarea></label><button class="btn-primary w-full">Registrar ATS del día</button></form>`); }
+
+function timesheetModal(project){ openModal(`Tareo · ${project.code}`,`<form id="timesheet-form" data-project="${project.id}" class="space-y-4"><div class="rounded-xl bg-blue-50 p-3 text-sm font-semibold text-blue-800">El sistema validará que exista ATS en esta fecha.</div><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Fecha</span><input name="date" type="date" value="${today()}" required></label><label class="field"><span>DNI</span><input name="documentNumber" inputmode="numeric" required></label></div><label class="field"><span>Trabajador</span><input name="workerName" required></label><div class="grid gap-4 sm:grid-cols-3"><label class="field"><span>Oficio</span><input name="trade" placeholder="Técnico electricista" required></label><label class="field"><span>Horas</span><input name="hours" type="number" min="0" max="16" step=".5" value="8" required></label><label class="field"><span>Costo/hora S/</span><input name="hourlyRate" type="number" min="0" step=".01" value="${n(project.laborHourRate)}" required></label></div><input type="hidden" name="attendanceStatus" value="PRESENT"><button class="btn-primary w-full">Guardar tareo</button></form>`); }
+
+function expenseModal(project){ openModal(`Rendición de gasto · ${project.code}`,`<form id="expense-form" data-project="${project.id}" class="space-y-4"><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Fecha</span><input name="date" type="date" value="${today()}" required></label><label class="field"><span>Categoría</span><select name="category"><option>Movilidad</option><option>Alimentación</option><option>Material imprevisto</option><option>Hospedaje</option><option>Otros</option></select></label></div><label class="field"><span>Descripción</span><input name="description" required></label><div class="grid gap-4 sm:grid-cols-3"><label class="field"><span>Proveedor</span><input name="supplier"></label><label class="field"><span>Comprobante</span><input name="documentNumber"></label><label class="field"><span>Monto S/</span><input name="amount" type="number" min=".01" step=".01" required></label></div><label class="field"><span>Foto/PDF del comprobante</span><input name="receipt" type="file" accept="image/*,application/pdf"></label><input type="hidden" name="documentType" value="COMPROBANTE"><button class="btn-primary w-full">Enviar a aprobación</button></form>`); }
+function progressModal(project){ openModal(`Avance diario · ${project.code}`,`<form id="progress-form" data-project="${project.id}" class="space-y-4"><label class="field"><span>Avance acumulado (%)</span><input name="percent" type="number" min="${n(project.progressPct)}" max="100" value="${n(project.progressPct)}" required></label><label class="field"><span>Trabajo ejecutado y restricciones</span><textarea name="notes" rows="4" required></textarea></label><button class="btn-primary w-full">Actualizar avance</button></form>`); }
+
+function closureModal(project){ openModal(`Cierre y conformidad · ${project.code}`,`<form id="closure-form" data-project="${project.id}" class="space-y-4"><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Nombre del cliente</span><input name="clientName" required></label><label class="field"><span>DNI/RUC</span><input name="clientDocument" required></label></div><label class="field"><span>Cargo</span><input name="clientPosition"></label><div class="grid gap-4 sm:grid-cols-3"><label class="field"><span>Medición</span><select name="measurementType"><option>Resistencia de puesta a tierra</option><option>Aislamiento</option><option>Voltaje</option><option>Corriente</option></select></label><label class="field"><span>Valor</span><input name="measurementValue" type="number" step=".001" required></label><label class="field"><span>Unidad</span><input name="measurementUnit" value="Ω" required></label></div><label class="field"><span>Fotos técnicas (máx. 6)</span><input name="photos" type="file" accept="image/*" capture="environment" multiple required></label><label class="field"><span>Observaciones</span><textarea name="observations" rows="2"></textarea></label><div><p class="mb-2 text-xs font-extrabold uppercase text-slate-600">Firma digital del cliente</p><canvas id="signature" class="h-40 w-full touch-none rounded-xl border-2 border-dashed border-slate-300 bg-white"></canvas><button type="button" class="mt-2 text-xs font-bold text-blue-700" data-action="clear-signature">Limpiar firma</button></div><label class="flex items-start gap-3 text-sm"><input name="accepted" type="checkbox" class="mt-1" required><span>El cliente declara la conformidad de los trabajos ejecutados.</span></label><button class="btn-primary w-full">Firmar y cerrar obra</button></form>`); setupSignature(); }
+
+function setupSignature(){ const canvas=$("#signature"); if(!canvas)return; const ratio=devicePixelRatio||1; canvas.width=canvas.clientWidth*ratio;canvas.height=160*ratio;const ctx=canvas.getContext("2d");ctx.scale(ratio,ratio);ctx.lineWidth=2;ctx.lineCap="round";ctx.strokeStyle="#0f172a";let drawing=false;const pos=e=>{const r=canvas.getBoundingClientRect(),p=e.touches?.[0]||e;return{x:p.clientX-r.left,y:p.clientY-r.top}};canvas.addEventListener("pointerdown",e=>{drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)});canvas.addEventListener("pointermove",e=>{if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()});window.addEventListener("pointerup",()=>drawing=false,{once:false}); }
+
+async function showProjectDetail(project){ openModal(`${project.code} · ${project.name}`,`<div class="py-10 text-center text-sm text-slate-500">Cargando expediente…</div>`); try{const d=await projectDetails(project.id); $("#modal-body").innerHTML=`<div class="space-y-5"><div class="grid grid-cols-2 gap-3"><div class="rounded-xl bg-slate-50 p-3"><p class="text-xs text-slate-500">Avance</p><b class="text-xl">${n(project.progressPct)}%</b></div><div class="rounded-xl bg-slate-50 p-3"><p class="text-xs text-slate-500">Rentabilidad</p><b class="text-xl">${MONEY.format(net(project))}</b></div></div><div class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3"><span class="rounded-lg bg-blue-50 p-2">${d.timesheets.length} tareos</span><span class="rounded-lg bg-amber-50 p-2">${d.safetyChecks.length} ATS</span><span class="rounded-lg bg-emerald-50 p-2">${d.expenses.length} gastos</span></div><button class="btn-primary w-full" data-action="project-pdf" data-id="${project.id}">Descargar expediente PDF</button></div>`; state.currentDetail=d;}catch(e){toast(e.message,"error");} }
+
+document.addEventListener("click",async e=>{
+  const nav=e.target.closest("[data-nav]"); if(nav){setView(nav.dataset.nav);return;}
+  const btn=e.target.closest("[data-action]"); if(!btn)return; const id=btn.dataset.id; const project=projectById(id);
+  try{
+    if(btn.dataset.action==="logout") await logout();
+    if(btn.dataset.action==="refresh"){await refreshData();toast("Datos actualizados");}
+    if(btn.dataset.action==="new-project")newProjectModal();
+    if(btn.dataset.action==="field-logistics"){ const reqs=await listRequirements(id); const pending=reqs[0]; pending?logisticsModal(pending):requirementModal(project); }
+    if(btn.dataset.action==="ats")atsModal(project);
+    if(btn.dataset.action==="timesheet")timesheetModal(project);
+    if(btn.dataset.action==="expense")expenseModal(project);
+    if(btn.dataset.action==="progress")progressModal(project);
+    if(btn.dataset.action==="closure")closureModal(project);
+    if(btn.dataset.action==="project-detail")await showProjectDetail(project);
+    if(btn.dataset.action==="project-pdf"){const p=projectById(id);const d=state.currentDetail||await projectDetails(id);exportProjectPdf(p,d);}
+    if(btn.dataset.action==="requirement"){const req=state.requirements.find(r=>r.id===id);logisticsModal(req);}
+    if(btn.dataset.action==="add-item")$("#items").insertAdjacentHTML("beforeend",itemRow());
+    if(btn.dataset.action==="clear-signature"){const c=$("#signature");c.getContext("2d").clearRect(0,0,c.width,c.height);}
+    if(btn.dataset.action==="confirm-reception"){const req=state.requirements.find(r=>r.id===btn.dataset.req)||(await listRequirements(btn.dataset.project)).find(r=>r.id===btn.dataset.req);await confirmReception(projectById(btn.dataset.project),req,state.profile);closeModal();await refreshData();toast("Recepción confirmada. El ATS quedó habilitado.");}
+    if(btn.dataset.action==="expense-review"){const expense=state.expenses.find(x=>x.id===id);await approveExpense(expense,btn.dataset.status,state.profile);await refreshData();toast(btn.dataset.status==="APPROVED"?"Gasto aprobado":"Gasto rechazado");}
+    if(btn.dataset.action==="management-pdf")exportManagementPdf(state.projects,{efficiency:state.charts.efficiency?.toBase64Image(),workload:state.charts.workload?.toBase64Image()});
+  }catch(err){toast(err.message,"error");}
+});
+
+document.addEventListener("submit",async e=>{
+  if(e.target.id==="login-form")return;
+  e.preventDefault(); const form=e.target; const fd=new FormData(form); const data=Object.fromEntries(fd.entries()); const submit=$("button[type=submit]",form); if(submit){submit.disabled=true;submit.textContent="Guardando…";}
+  try{
+    const project=projectById(form.dataset.project);
+    if(form.id==="project-form"){const sel=form.elements.fieldEngineerId;data.fieldEngineerName=sel.options[sel.selectedIndex].dataset.name;await createProject(data,state.profile);}
+    if(form.id==="requirement-form"){data.items=queryAll(".item-row",form).map(row=>Object.fromEntries(new FormData(row.closest("form")).entries())); data.items=queryAll(".item-row",form).map(row=>({itemName:$("[name=itemName]",row).value,quantity:$("[name=quantity]",row).value,unit:$("[name=unit]",row).value,estimatedUnitCost:$("[name=estimatedUnitCost]",row).value,category:"MATERIAL"}));await createRequirement(project,data,state.profile);}
+    if(form.id==="logistics-status-form"){const req=state.requirements.find(r=>r.id===form.dataset.id);await updateRequirementStatus(req,data.status,data.actualTotal,state.profile);}
+    if(form.id==="ats-form"){data.checks={ppe:fd.has("ppe"),tools:fd.has("tools"),risks:fd.has("risks"),signatures:fd.has("signatures")};await saveSafetyCheck(project,data,state.profile);}
+    if(form.id==="timesheet-form"){data.workerId=data.documentNumber;data.crewSize=1;await createTimesheet(project,data,state.profile);}
+    if(form.id==="expense-form")await createExpense(project,data,state.profile,form.elements.receipt.files[0]);
+    if(form.id==="progress-form")await updateProgress(project,data.percent,data.notes,state.profile);
+    if(form.id==="closure-form"){const canvas=$("#signature");data.signatureDataUrl=canvas.toDataURL("image/png");await closeProject(project,data,state.profile,form.elements.photos.files);}
+    closeModal(); await refreshData(); toast("Registro guardado correctamente");
+  }catch(err){toast(err.message,"error"); if(submit){submit.disabled=false;submit.textContent="Reintentar";}}
+});
+
+$("#login-form").addEventListener("submit",async e=>{e.preventDefault();const err=$("#login-error");err.classList.add("hidden");try{await login($("#login-email").value,$("#login-password").value);}catch(ex){err.textContent="No fue posible iniciar sesión. Verifica tus credenciales.";err.classList.remove("hidden");}});
+
+onAuthStateChanged(auth,async user=>{
+  if(!user){state.profile=null;$("#app-view").classList.add("hidden");$("#auth-view").classList.remove("hidden");return;}
+  try{
+    const profile=await getUserProfile(user.uid);
+    if(!profile?.active||!Object.values(ROLES).includes(profile.role)){await logout();const err=$("#login-error");err.textContent="Tu cuenta no tiene un perfil activo. Solicita a Gerencia que cree users/"+user.uid;err.classList.remove("hidden");return;}
+    state.profile={...profile,email:user.email,displayName:profile.displayName||user.email};
+    $("#auth-view").classList.add("hidden");$("#app-view").classList.remove("hidden");$("#side-user").textContent=state.profile.displayName;$("#side-role").textContent=ROLE_LABELS[state.profile.role];
+    state.users=[ROLES.OWNER,ROLES.COORDINATOR].includes(profile.role)?await listUsers():[profile]; renderNav(); await refreshData();
+  }catch(e){toast(e.message,"error");}
+});
+
+window.addEventListener("online",()=>{$("#sync-status").innerHTML='<i class="h-2 w-2 rounded-full bg-emerald-500"></i> En línea';});
+window.addEventListener("offline",()=>{$("#sync-status").innerHTML='<i class="h-2 w-2 rounded-full bg-amber-500"></i> Sin conexión';});
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();state.installPrompt=e;$("#install-btn").classList.remove("hidden");});
+$("#install-btn").addEventListener("click",async()=>{await state.installPrompt?.prompt();state.installPrompt=null;$("#install-btn").classList.add("hidden");});
+
+  </script>
 </body>
 </html>
