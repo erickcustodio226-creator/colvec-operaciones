@@ -6,13 +6,11 @@
     <title>COLVEC C&M | Gestión Documental y Operaciones</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-slate-800 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-100 text-slate-800 min-h-screen">
 
-    <!-- Contenedor Principal -->
-    <div id="app" class="w-full max-w-md">
-        
-        <!-- VISTA DE LOGIN Y CREAR USUARIO -->
-        <div id="auth-container" class="bg-white rounded-2xl shadow-2xl p-8">
+    <!-- VISTA DE LOGIN / REGISTRO -->
+    <div id="auth-container" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
             <div class="text-center mb-6">
                 <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white mb-3 shadow-lg text-xl">
                     🏢
@@ -44,42 +42,108 @@
                 </button>
             </div>
         </div>
-
-        <!-- VISTA DEL PANEL (DASHBOARD) - Oculta hasta iniciar sesión -->
-        <div id="dashboard-container" class="hidden bg-white rounded-2xl shadow-2xl p-8">
-            <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900">Panel de Operaciones</h2>
-                    <p class="text-xs text-slate-500" id="user-email-display"></p>
-                </div>
-                <button id="logout-btn" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition">
-                    Salir
-                </button>
-            </div>
-            
-            <div class="space-y-4 text-center">
-                <div class="p-4 bg-blue-50 border border-blue-100 rounded-xl text-left">
-                    <h3 class="font-bold text-blue-900 text-sm mb-1">¡Conectado exitosamente!</h3>
-                    <p class="text-xs text-blue-700">Tu sistema ya está vinculado a Firebase Hosting y Auth.</p>
-                </div>
-                
-                <div class="p-6 border border-slate-200 rounded-xl">
-                    <p class="text-sm text-slate-600 mb-3">Aquí puedes registrar tus cartas y documentos de COLVEC.</p>
-                    <button onclick="alert('¡Módulo listo para registrar operaciones!')" class="w-full py-3 bg-slate-900 text-white text-xs font-medium rounded-lg hover:bg-slate-800 transition shadow">
-                        + Nueva Carta u Operación
-                    </button>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <!-- CÓDIGO DE FIREBASE Y FUNCIONALIDAD -->
+    <!-- VISTA PRINCIPAL (DASHBOARD Y REGISTRO DE CARTAS) -->
+    <div id="dashboard-container" class="hidden min-h-screen flex flex-col">
+        <!-- Navbar -->
+        <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
+                    🏢
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 text-base">COLVEC C&M</h1>
+                    <p class="text-xs text-slate-500">Módulo de Control y Operaciones</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-xs text-slate-600 font-medium hidden sm:inline" id="user-email-display"></span>
+                <button id="logout-btn" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </header>
+
+        <!-- Contenido -->
+        <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Columna Izquierda: Formulario para Nueva Carta / Operación -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:col-span-1 h-fit">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b">Nueva Carta u Operación</h2>
+                <form id="doc-form" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tipo de Documento</label>
+                        <select id="doc-type" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                            <option value="Carta">Carta</option>
+                            <option value="Oficio">Oficio</option>
+                            <option value="Memorándum">Memorándum</option>
+                            <option value="Factura / Recibo">Factura / Recibo</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nº de Documento / Código</label>
+                        <input type="text" id="doc-number" required placeholder="Ej. 001-2026" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Remitente / Destinatario</label>
+                        <input type="text" id="doc-entity" required placeholder="Nombre de la entidad o persona" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Asunto / Descripción</label>
+                        <textarea id="doc-subject" rows="3" required placeholder="Resumen del contenido..." class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Estado</label>
+                        <select id="doc-status" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En Trámite">En Trámite</option>
+                            <option value="Completado">Completado</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 shadow text-sm">
+                        Guardar Registro
+                    </button>
+                </form>
+            </div>
+
+            <!-- Columna Derecha: Tabla de Registros en la Nube -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:col-span-2 flex flex-col">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b flex justify-between items-center">
+                    <span>Registros Guardados</span>
+                    <span id="doc-count" class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-semibold">0 documentos</span>
+                </h2>
+                
+                <div class="flex-1 overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b text-xs font-semibold text-slate-400 uppercase bg-slate-50">
+                                <th class="p-3">Detalles</th>
+                                <th class="p-3">Entidad</th>
+                                <th class="p-3">Asunto</th>
+                                <th class="p-3">Estado</th>
+                                <th class="p-3 text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="docs-table-body" class="divide-y text-sm">
+                            <tr>
+                                <td colspan="5" class="text-center py-8 text-slate-400">Cargando registros...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- SCRIPT DE FIREBASE Y LÓGICA DE LA APP -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Tus llaves correctas de Firebase
         const firebaseConfig = {
           apiKey: "AIzaSyB80H5vQs7OrVdPNidN_h_68TweJH-P6rI",
           authDomain: "colvec-operaciones.firebaseapp.com",
@@ -92,45 +156,42 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
         let isRegistering = false;
 
+        const authContainer = document.getElementById('auth-container');
+        const dashboardContainer = document.getElementById('dashboard-container');
         const authForm = document.getElementById('auth-form');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const submitBtn = document.getElementById('submit-btn');
         const toggleModeBtn = document.getElementById('toggle-mode');
         const errorMsg = document.getElementById('error-msg');
-        const authContainer = document.getElementById('auth-container');
-        const dashboardContainer = document.getElementById('dashboard-container');
         const userEmailDisplay = document.getElementById('user-email-display');
         const logoutBtn = document.getElementById('logout-btn');
 
-        // Alternar entre iniciar sesión y registrarse
+        const docForm = document.getElementById('doc-form');
+        const docsTableBody = document.getElementById('docs-table-body');
+        const docCount = document.getElementById('doc-count');
+
+        // Alternar Login / Registro
         toggleModeBtn.addEventListener('click', () => {
             isRegistering = !isRegistering;
-            if (isRegistering) {
-                submitBtn.textContent = 'Crear Cuenta';
-                toggleModeBtn.textContent = '¿Ya tienes cuenta? Inicia Sesión';
-            } else {
-                submitBtn.textContent = 'Iniciar Sesión';
-                toggleModeBtn.textContent = '¿No tienes cuenta? Regístrate aquí';
-            }
+            submitBtn.textContent = isRegistering ? 'Crear Cuenta' : 'Iniciar Sesión';
+            toggleModeBtn.textContent = isRegistering ? '¿Ya tienes cuenta? Inicia Sesión' : '¿No tienes cuenta? Regístrate aquí';
             errorMsg.classList.add('hidden');
         });
 
-        // Manejar el botón de Enviar (Login o Registro)
+        // Autenticación
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorMsg.classList.add('hidden');
-            const email = emailInput.value;
-            const password = passwordInput.value;
-
             try {
                 if (isRegistering) {
-                    await createUserWithEmailAndPassword(auth, email, password);
+                    await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
                 } else {
-                    await signInWithEmailAndPassword(auth, email, password);
+                    await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
                 }
             } catch (error) {
                 errorMsg.textContent = "Error: " + error.message;
@@ -138,24 +199,97 @@
             }
         });
 
-        // Controlar pantallas según si hay sesión iniciada
+        logoutBtn.addEventListener('click', () => signOut(auth));
+
+        // Control de vistas y carga de datos en tiempo real
+        let unsubscribe = null;
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 authContainer.classList.add('hidden');
                 dashboardContainer.classList.remove('hidden');
                 userEmailDisplay.textContent = user.email;
+                cargarDocumentos();
             } else {
                 dashboardContainer.classList.add('hidden');
                 authContainer.classList.remove('hidden');
                 emailInput.value = '';
                 passwordInput.value = '';
+                if (unsubscribe) unsubscribe();
             }
         });
 
-        // Cerrar sesión
-        logoutBtn.addEventListener('click', async () => {
-            await signOut(auth);
+        // Guardar nuevo documento en Firestore
+        docForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const tipo = document.getElementById('doc-type').value;
+            const numero = document.getElementById('doc-number').value;
+            const entidad = document.getElementById('doc-entity').value;
+            const asunto = document.getElementById('doc-subject').value;
+            const estado = document.getElementById('doc-status').value;
+
+            try {
+                await addDoc(collection(db, "documentos"), {
+                    tipo,
+                    numero,
+                    entidad,
+                    asunto,
+                    estado,
+                    fecha: new Date().toLocaleDateString()
+                });
+                docForm.reset();
+            } catch (error) {
+                alert("Error al guardar: " + error.message);
+            }
         });
+
+        // Cargar documentos en tiempo real
+        function cargarDocumentos() {
+            const q = query(collection(db, "documentos"));
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                let html = "";
+                let count = 0;
+                snapshot.forEach((docSnap) => {
+                    count++;
+                    const data = docSnap.data();
+                    let badgeColor = "bg-yellow-100 text-yellow-800";
+                    if (data.estado === "Completado") badgeColor = "bg-green-100 text-green-800";
+                    if (data.estado === "En Trámite") badgeColor = "bg-blue-100 text-blue-800";
+
+                    html += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3">
+                                <span class="font-bold text-slate-900 block">${data.tipo}: ${data.numero}</span>
+                                <span class="text-xs text-slate-400">${data.fecha}</span>
+                            </td>
+                            <td class="p-3 text-slate-700">${data.entidad}</td>
+                            <td class="p-3 text-slate-600 max-w-xs truncate">${data.asunto}</td>
+                            <td class="p-3">
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full ${badgeColor}">${data.estado}</span>
+                            </td>
+                            <td class="p-3 text-right">
+                                <button onclick="window.eliminarDoc('${docSnap.id}')" class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 bg-red-50 rounded">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                if (count === 0) {
+                    html = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No hay cartas ni documentos registrados aún.</td></tr>`;
+                }
+                docsTableBody.innerHTML = html;
+                docCount.textContent = `${count} documentos`;
+            });
+        }
+
+        // Función global para eliminar documento
+        window.eliminarDoc = async function(id) {
+            if (confirm("¿Estás seguro de eliminar este registro?")) {
+                try {
+                    await deleteDoc(doc(db, "documentos", id));
+                } catch (error) {
+                    alert("Error al eliminar: " + error.message);
+                }
+            }
+        }
     </script>
 </body>
 </html>
