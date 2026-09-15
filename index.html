@@ -115,6 +115,7 @@ dialog::backdrop { backdrop-filter:blur(3px); }
         <section id="view-logistics" data-view="logistics" class="view hidden space-y-6"></section>
         <section id="view-field" data-view="field" class="view hidden space-y-6"></section>
         <section id="view-reports" data-view="reports" class="view hidden space-y-6"></section>
+        <section id="view-admin" data-view="admin" class="view hidden space-y-6"></section>
       </main>
 
       <nav id="mobile-nav" class="fixed inset-x-0 bottom-0 z-50 grid border-t border-slate-200 bg-white px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,.08)] lg:hidden"></nav>
@@ -154,6 +155,9 @@ const ROLE_LABELS = Object.freeze({
   LOGISTICS: "Logística"
 });
 
+// Cuenta autorizada para crear el primer perfil OWNER durante la migración.
+const BOOTSTRAP_OWNER_EMAILS = Object.freeze(["ecustodiog@colvecsac.com"]);
+
 const PROJECT_STATUS = Object.freeze({
   APPROVED: "Aprobada",
   ASSIGNED: "Asignada",
@@ -177,7 +181,7 @@ const NUMBER = new Intl.NumberFormat("es-PE", { maximumFractionDigits: 1 });
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
-  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc,
@@ -190,6 +194,8 @@ const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const provisioningApp = initializeApp(FIREBASE_CONFIG, "colvec-user-provisioning");
+const provisioningAuth = getAuth(provisioningApp);
 
 
 const cleanText = (value, max = 180) => String(value ?? "").trim().replace(/\s+/g, " ").slice(0, max);
@@ -204,9 +210,40 @@ async function getUserProfile(uid) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
+async function createBootstrapOwner(user) {
+  const profile = {
+    displayName: user.displayName || user.email.split("@")[0],
+    email: user.email.toLowerCase(), role: "OWNER", active: true,
+    specialties: [], createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  };
+  await setDoc(doc(db, "users", user.uid), profile);
+  return { id: user.uid, ...profile };
+}
+
 async function listUsers() {
   const snap = await getDocs(query(collection(db, "users"), where("active", "==", true)));
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+async function createManagedUser(data, actor) {
+  if (actor.role !== "OWNER") throw new Error("Solo Gerencia puede crear usuarios.");
+  const allowedRoles = ["COORDINATOR", "FIELD_ENGINEER", "LOGISTICS"];
+  if (!allowedRoles.includes(data.role)) throw new Error("Selecciona un rol autorizado.");
+  const email = cleanText(data.email, 160).toLowerCase();
+  const displayName = cleanText(data.displayName, 120);
+  if (!displayName || !email || String(data.password || "").length < 8) throw new Error("Completa nombre, correo y una contraseña temporal de 8 caracteres.");
+  const credential = await createUserWithEmailAndPassword(provisioningAuth, email, data.password);
+  try {
+    await setDoc(doc(db, "users", credential.user.uid), {
+      displayName, email, role: data.role, active: true,
+      specialties: [], createdBy: actor.id, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    await signOut(provisioningAuth);
+    return { id: credential.user.uid, displayName, email, role: data.role, active: true };
+  } catch (error) {
+    await deleteUser(credential.user).catch(() => {});
+    throw error;
+  }
 }
 
 async function listProjects(profile) {
@@ -487,6 +524,7 @@ const NAV = [
   { id:"logistics", label:"Logística", icon:"▣", roles:[ROLES.OWNER,ROLES.LOGISTICS,ROLES.FIELD_ENGINEER] },
   { id:"field", label:"Campo", icon:"✓", roles:[ROLES.OWNER,ROLES.FIELD_ENGINEER] },
   { id:"reports", label:"Reportes", icon:"↗", roles:[ROLES.OWNER] }
+  ,{ id:"admin", label:"Usuarios", icon:"◎", roles:[ROLES.OWNER] }
 ];
 
 function toast(message, type="ok") { const el=$("#toast"); el.textContent=message; el.className=`fixed right-4 top-4 z-[100] max-w-sm rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-2xl ${type==="error"?"bg-red-600":"bg-slate-900"}`; setTimeout(()=>el.classList.add("hidden"),3500); }
@@ -526,6 +564,7 @@ function renderCurrent(){
   if(state.activeView==="logistics") renderLogistics();
   if(state.activeView==="field") renderField();
   if(state.activeView==="reports") renderReports();
+  if(state.activeView==="admin") renderAdmin();
 }
 
 function renderDashboard(){
@@ -583,6 +622,15 @@ function renderReports(){
   state.charts.workload=new Chart($("#workload-chart"),{type:"doughnut",data:{labels:Object.keys(grouped),datasets:[{data:Object.values(grouped),backgroundColor:["#2563eb","#0f766e","#d97706","#7c3aed","#dc2626","#0891b2"]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"}}}});
 }
 
+function renderAdmin(){
+  const roles=ROLE_LABELS;
+  $("#view-admin").innerHTML=`<div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h2 class="text-2xl font-extrabold">Administración de usuarios</h2><p class="mt-1 text-sm text-slate-500">Crea cuentas y asigna responsabilidades dentro de COLVEC.</p></div><button class="btn-primary" data-action="new-user">+ Crear usuario</button></div><div class="grid gap-3 sm:grid-cols-3"><article class="card p-4"><p class="text-xs font-extrabold uppercase text-slate-500">Usuarios activos</p><p class="mt-2 text-3xl font-extrabold">${state.users.length}</p></article><article class="card p-4"><p class="text-xs font-extrabold uppercase text-slate-500">Ingenieros de campo</p><p class="mt-2 text-3xl font-extrabold">${state.users.filter(u=>u.role===ROLES.FIELD_ENGINEER).length}</p></article><article class="card p-4"><p class="text-xs font-extrabold uppercase text-slate-500">Administradores</p><p class="mt-2 text-3xl font-extrabold">${state.users.filter(u=>u.role===ROLES.OWNER).length}</p></article></div><article class="card overflow-hidden">${!state.users.length?empty("Sin usuarios","Crea la primera cuenta operativa."):`<div class="table-wrap"><table><thead><tr><th>Colaborador</th><th>Correo</th><th>Rol</th><th>Estado</th></tr></thead><tbody>${state.users.map(u=>`<tr><td><b>${esc(u.displayName)}</b></td><td>${esc(u.email)}</td><td>${esc(roles[u.role]||u.role)}</td><td>${u.active?'<span class="status status-green">Activo</span>':'<span class="status status-slate">Inactivo</span>'}</td></tr>`).join("")}</tbody></table></div>`}</article><div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><b>Importante:</b> entrega la contraseña temporal de manera privada. En una siguiente etapa se puede incorporar cambio obligatorio de contraseña y recuperación por correo.</div>`;
+}
+
+function newUserModal(){
+  openModal("Crear usuario",`<form id="user-form" class="space-y-4"><label class="field"><span>Nombres y apellidos</span><input name="displayName" required placeholder="Ej. Juan Pérez López"></label><label class="field"><span>Correo corporativo</span><input name="email" type="email" required placeholder="usuario@colvecsac.com"></label><label class="field"><span>Rol en la plataforma</span><select name="role" required><option value="">Seleccionar…</option><option value="COORDINATOR">Ingeniería encargada</option><option value="FIELD_ENGINEER">Ingeniería de campo</option><option value="LOGISTICS">Logística</option></select></label><label class="field"><span>Contraseña temporal</span><input name="password" type="password" minlength="8" autocomplete="new-password" required placeholder="Mínimo 8 caracteres"></label><div class="rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900">El usuario podrá iniciar sesión inmediatamente con este correo y contraseña.</div><button class="btn-primary w-full">Crear cuenta y asignar rol</button></form>`);
+}
+
 function newProjectModal(){ const engineers=state.users.filter(u=>u.role===ROLES.FIELD_ENGINEER); openModal("Crear y asignar obra",`<form id="project-form" class="space-y-4"><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Código único</span><input name="code" required placeholder="OB-2026-001"></label><label class="field"><span>Tipo de servicio</span><select name="serviceType"><option>Obra electromecánica</option><option>Mantenimiento</option><option>Expediente técnico</option><option>Medición / protocolo</option></select></label></div><label class="field"><span>Nombre del proyecto</span><input name="name" required></label><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Cliente</span><input name="client" required></label><label class="field"><span>Ubicación</span><input name="location" required></label></div><div class="grid gap-4 sm:grid-cols-3"><label class="field"><span>Presupuesto venta S/</span><input name="budgetSale" type="number" step=".01" min="1" required></label><label class="field"><span>Días programados</span><input name="programmedDays" type="number" min="1" required></label><label class="field"><span>Costo hora base S/</span><input name="laborHourRate" type="number" step=".01" min="0" required></label></div><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Dificultad</span><select name="difficulty"><option>Baja</option><option selected>Media</option><option>Alta</option><option>Crítica</option></select></label><label class="field"><span>Ingeniero de campo</span><select name="fieldEngineerId" required><option value="">Seleccionar…</option>${engineers.map(u=>`<option value="${u.id}" data-name="${esc(u.displayName)}">${esc(u.displayName)}</option>`).join("")}</select></label></div><button class="btn-primary w-full">Crear y asignar</button></form>`); }
 
 function requirementModal(project){ openModal(`Requerimiento · ${project.code}`,`<form id="requirement-form" data-project="${project.id}" class="space-y-4"><div class="grid gap-4 sm:grid-cols-2"><label class="field"><span>Fecha necesaria</span><input name="neededDate" type="date" min="${today()}" value="${today()}" required></label><label class="field"><span>Observaciones</span><input name="notes" placeholder="Entrega en obra, marcas permitidas…"></label></div><div><div class="mb-2 flex items-center justify-between"><b class="text-sm">Materiales y EPP</b><button type="button" class="text-sm font-bold text-blue-700" data-action="add-item">+ Agregar ítem</button></div><div id="items" class="space-y-2">${itemRow()}</div></div><button class="btn-primary w-full">Enviar a Logística</button></form>`); }
@@ -610,6 +658,7 @@ document.addEventListener("click",async e=>{
     if(btn.dataset.action==="logout") await logout();
     if(btn.dataset.action==="refresh"){await refreshData();toast("Datos actualizados");}
     if(btn.dataset.action==="new-project")newProjectModal();
+    if(btn.dataset.action==="new-user")newUserModal();
     if(btn.dataset.action==="field-logistics"){ const reqs=await listRequirements(id); const pending=reqs[0]; pending?logisticsModal(pending):requirementModal(project); }
     if(btn.dataset.action==="ats")atsModal(project);
     if(btn.dataset.action==="timesheet")timesheetModal(project);
@@ -633,6 +682,7 @@ document.addEventListener("submit",async e=>{
   try{
     const project=projectById(form.dataset.project);
     if(form.id==="project-form"){const sel=form.elements.fieldEngineerId;data.fieldEngineerName=sel.options[sel.selectedIndex].dataset.name;await createProject(data,state.profile);}
+    if(form.id==="user-form"){await createManagedUser(data,state.profile);state.users=await listUsers();}
     if(form.id==="requirement-form"){data.items=queryAll(".item-row",form).map(row=>Object.fromEntries(new FormData(row.closest("form")).entries())); data.items=queryAll(".item-row",form).map(row=>({itemName:$("[name=itemName]",row).value,quantity:$("[name=quantity]",row).value,unit:$("[name=unit]",row).value,estimatedUnitCost:$("[name=estimatedUnitCost]",row).value,category:"MATERIAL"}));await createRequirement(project,data,state.profile);}
     if(form.id==="logistics-status-form"){const req=state.requirements.find(r=>r.id===form.dataset.id);await updateRequirementStatus(req,data.status,data.actualTotal,state.profile);}
     if(form.id==="ats-form"){data.checks={ppe:fd.has("ppe"),tools:fd.has("tools"),risks:fd.has("risks"),signatures:fd.has("signatures")};await saveSafetyCheck(project,data,state.profile);}
@@ -649,7 +699,8 @@ $("#login-form").addEventListener("submit",async e=>{e.preventDefault();const er
 onAuthStateChanged(auth,async user=>{
   if(!user){state.profile=null;$("#app-view").classList.add("hidden");$("#auth-view").classList.remove("hidden");return;}
   try{
-    const profile=await getUserProfile(user.uid);
+    let profile=await getUserProfile(user.uid);
+    if(!profile && BOOTSTRAP_OWNER_EMAILS.includes((user.email||"").toLowerCase())) profile=await createBootstrapOwner(user);
     if(!profile?.active||!Object.values(ROLES).includes(profile.role)){await logout();const err=$("#login-error");err.textContent="Tu cuenta no tiene un perfil activo. Solicita a Gerencia que cree users/"+user.uid;err.classList.remove("hidden");return;}
     state.profile={...profile,email:user.email,displayName:profile.displayName||user.email};
     $("#auth-view").classList.add("hidden");$("#app-view").classList.remove("hidden");$("#side-user").textContent=state.profile.displayName;$("#side-role").textContent=ROLE_LABELS[state.profile.role];
