@@ -2,147 +2,341 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COLVEC C&M | Gestión Documental y Operaciones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>COLVEC C&M | Gestión de Obras y Operaciones</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Ajuste de scroll suave para móvil */
+        body { -webkit-tap-highlight-color: transparent; }
+    </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen">
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-20 md:pb-6">
 
-    <!-- VISTA DE LOGIN / REGISTRO -->
+    <!-- VISTA DE AUTENTICACIÓN -->
     <div id="auth-container" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
-        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
             <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white mb-3 shadow-lg text-xl">
-                    🏢
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white mb-3 shadow-lg text-2xl">
+                    ⚡
                 </div>
-                <h1 class="text-2xl font-bold text-slate-900">COLVEC C&M</h1>
-                <p class="text-sm text-slate-500">Gestión Documental y Operaciones</p>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">COLVEC C&M S.A.C.</h1>
+                <p class="text-xs text-slate-500 font-medium mt-1">Plataforma Móvil de Obras e Ingeniería</p>
             </div>
 
-            <div id="error-msg" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg"></div>
+            <div id="error-msg" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl font-medium"></div>
 
             <form id="auth-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Correo Electrónico</label>
-                    <input type="email" id="email" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Correo Corporativo</label>
+                    <input type="email" id="email" required placeholder="usuario@colvecsac.com" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Contraseña</label>
-                    <input type="password" id="password" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Contraseña</label>
+                    <input type="password" id="password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
                 </div>
                 
-                <button type="submit" id="submit-btn" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 shadow-md text-sm">
+                <button type="submit" id="submit-btn" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg text-sm">
                     Iniciar Sesión
                 </button>
             </form>
 
             <div class="mt-6 text-center">
-                <button id="toggle-mode" class="text-xs text-blue-600 hover:underline font-medium">
+                <button id="toggle-mode" class="text-xs text-blue-600 hover:underline font-semibold">
                     ¿No tienes cuenta? Regístrate aquí
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- VISTA PRINCIPAL (DASHBOARD Y REGISTRO DE CARTAS) -->
+    <!-- DASHBOARD PRINCIPAL -->
     <div id="dashboard-container" class="hidden min-h-screen flex flex-col">
-        <!-- Navbar -->
-        <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm">
-            <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
-                    🏢
+        
+        <!-- Header Móvil / Desktop -->
+        <header class="bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-40 shadow-sm flex justify-between items-center">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-base shadow">
+                    ⚡
                 </div>
                 <div>
-                    <h1 class="font-bold text-slate-900 text-base">COLVEC C&M</h1>
-                    <p class="text-xs text-slate-500">Módulo de Control y Operaciones</p>
+                    <h1 class="font-bold text-slate-900 text-sm leading-tight">COLVEC C&M</h1>
+                    <p class="text-[10px] text-slate-500 font-medium">Obras & Operaciones Campo</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-4">
+            
+            <div class="flex items-center space-x-2">
                 <span class="text-xs text-slate-600 font-medium hidden sm:inline" id="user-email-display"></span>
-                <button id="logout-btn" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition">
-                    Cerrar Sesión
+                <button id="logout-btn" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-lg transition">
+                    Salir
                 </button>
             </div>
         </header>
 
-        <!-- Contenido -->
-        <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- BARRA DE NAVEGACIÓN INFERIOR (OPTIMIZADA PARA CELULARES) -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 flex justify-around p-1 sm:p-2 shadow-lg md:relative md:border-t-0 md:bg-transparent md:shadow-none md:justify-center md:gap-2 md:my-4">
+            <button onclick="cambiarSeccion('obras')" id="nav-obras" class="flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl bg-blue-600 text-white transition">
+                <span class="text-base md:text-sm md:mr-1.5">🏗️</span>
+                <span>Obras</span>
+            </button>
+            <button onclick="cambiarSeccion('gastos')" id="nav-gastos" class="flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-200 transition">
+                <span class="text-base md:text-sm md:mr-1.5">💰</span>
+                <span>Gastos</span>
+            </button>
+            <button onclick="cambiarSeccion('activos')" id="nav-activos" class="flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-200 transition">
+                <span class="text-base md:text-sm md:mr-1.5">🛠️</span>
+                <span>Activos</span>
+            </button>
+            <button onclick="cambiarSeccion('tareo')" id="nav-tareo" class="flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-200 transition">
+                <span class="text-base md:text-sm md:mr-1.5">⏱️</span>
+                <span>Tareo</span>
+            </button>
+            <button onclick="cambiarSeccion('jefatura')" id="nav-jefatura" class="flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-200 transition">
+                <span class="text-base md:text-sm md:mr-1.5">📊</span>
+                <span>Resumen</span>
+            </button>
+        </nav>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
             
-            <!-- Columna Izquierda: Formulario para Nueva Carta / Operación -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:col-span-1 h-fit">
-                <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b">Nueva Carta u Operación</h2>
-                <form id="doc-form" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tipo de Documento</label>
-                        <select id="doc-type" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-                            <option value="Carta">Carta</option>
-                            <option value="Oficio">Oficio</option>
-                            <option value="Memorándum">Memorándum</option>
-                            <option value="Factura / Recibo">Factura / Recibo</option>
-                            <option value="Otro">Otro</option>
-                        </select>
+            <!-- MÓDULO 1: OBRAS, SERVICIOS, EXPEDIENTES Y ADELANTOS -->
+            <div id="sec-obras" class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                <!-- Formulario -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b flex items-center gap-2">
+                        <span>➕ Registración de Obra / Servicio</span>
+                    </h2>
+                    <form id="obra-form" class="space-y-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tipo de Servicio</label>
+                            <select id="obra-tipo" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-500">
+                                <option value="Ejecución de Obra">Ejecución de Obra (Media Tensión)</option>
+                                <option value="Servicio Técnico / Pozo a Tierra">Servicio Técnico / Pozo a Tierra</option>
+                                <option value="Expediente Técnico">Expediente Técnico / Provias</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nombre / Proyecto</label>
+                            <input type="text" id="obra-nombre" required placeholder="Ej. Sistema Media Tensión Chimbote" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Cliente / Entidad</label>
+                            <input type="text" id="obra-cliente" required placeholder="Ej. Sr. Emilio Millio / Particular" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Presupuesto (S/.)</label>
+                                <input type="number" step="0.01" id="obra-presupuesto" required placeholder="0.00" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Adelanto (S/.)</label>
+                                <input type="number" step="0.01" id="obra-adelanto" value="0" required class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-blue-600">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Avance Actual (%)</label>
+                                <input type="number" min="0" max="100" id="obra-avance" value="0" required class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-blue-700">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Estado</label>
+                                <select id="obra-estado" class="w-full px-2 py-2.5 rounded-xl border border-slate-300 text-xs font-medium">
+                                    <option value="En Ejecución">En Ejecución</option>
+                                    <option value="En Evaluación">En Evaluación</option>
+                                    <option value="Finalizado">Finalizado</option>
+                                    <option value="Paralizado">Paralizado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-md mt-2">
+                            Guardar Registro de Campo
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Lista de Registros -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:col-span-2 flex flex-col">
+                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b flex justify-between items-center">
+                        <span>Control de Proyectos y Avances</span>
+                        <span id="obra-count" class="text-[11px] bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-bold">0 reg.</span>
+                    </h2>
+                    <div id="lista-obras" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
+                        <div class="text-center py-8 text-slate-400 text-xs">Cargando datos...</div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nº de Documento / Código</label>
-                        <input type="text" id="doc-number" required placeholder="Ej. 001-2026" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Remitente / Destinatario</label>
-                        <input type="text" id="doc-entity" required placeholder="Nombre de la entidad o persona" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Asunto / Descripción</label>
-                        <textarea id="doc-subject" rows="3" required placeholder="Resumen del contenido..." class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Estado</label>
-                        <select id="doc-status" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="En Trámite">En Trámite</option>
-                            <option value="Completado">Completado</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 shadow text-sm">
-                        Guardar Registro
-                    </button>
-                </form>
+                </div>
             </div>
 
-            <!-- Columna Derecha: Tabla de Registros en la Nube -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:col-span-2 flex flex-col">
-                <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b flex justify-between items-center">
-                    <span>Registros Guardados</span>
-                    <span id="doc-count" class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-semibold">0 documentos</span>
-                </h2>
-                
-                <div class="flex-1 overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b text-xs font-semibold text-slate-400 uppercase bg-slate-50">
-                                <th class="p-3">Detalles</th>
-                                <th class="p-3">Entidad</th>
-                                <th class="p-3">Asunto</th>
-                                <th class="p-3">Estado</th>
-                                <th class="p-3 text-right">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="docs-table-body" class="divide-y text-sm">
-                            <tr>
-                                <td colspan="5" class="text-center py-8 text-slate-400">Cargando registros...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- MÓDULO 2: CONTROL DE GASTOS Y COMPROBANTES -->
+            <div id="sec-gastos" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b">💰 Registrar Gasto / Factura</h2>
+                    <form id="gasto-form" class="space-y-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Proveedor</label>
+                            <input type="text" id="gas-proveedor" required placeholder="Ej. ITESA / Silicon / Aragcu" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nº Comprobante</label>
+                                <input type="text" id="gas-num" required placeholder="F001-XXXX" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Monto (S/.)</label>
+                                <input type="number" step="0.01" id="gas-monto" required placeholder="0.00" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-emerald-700">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Detalle del Gasto / Material</label>
+                            <textarea id="gas-desc" rows="2" required placeholder="Detalle de compra..." class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Aprobación</label>
+                            <select id="gas-estado" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium">
+                                <option value="Pendiente">Pendiente de Revisión</option>
+                                <option value="Aprobado">Aprobado</option>
+                                <option value="Rechazado">Rechazado</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-md">
+                            Registrar Comprobante
+                        </button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:col-span-2 flex flex-col">
+                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b flex justify-between items-center">
+                        <span>Historial de Gastos</span>
+                        <span id="gas-total" class="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold">Total: S/. 0.00</span>
+                    </h2>
+                    <div id="lista-gastos" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
+                        <div class="text-center py-8 text-slate-400 text-xs">Cargando gastos...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO 3: ACTIVOS Y HERRAMIENTAS DE CAMPO -->
+            <div id="sec-activos" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b">🛠️ Asignar Activo / Equipo</h2>
+                    <form id="activo-form" class="space-y-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nombre del Equipo</label>
+                            <input type="text" id="act-nombre" required placeholder="Ej. Telurómetro / Megómentro / EPP" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Código / Serie</label>
+                                <input type="text" id="act-serie" required placeholder="COL-EQ-01" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Estado</label>
+                                <select id="act-estado" class="w-full px-2 py-2.5 rounded-xl border border-slate-300 text-xs font-medium">
+                                    <option value="Operativo">Operativo</option>
+                                    <option value="En Campo">Asignado a Campo</option>
+                                    <option value="Mantenimiento">Mantenimiento</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Responsable / Ubicación</label>
+                            <input type="text" id="act-ubicacion" required placeholder="Ej. Téc. Juan / Obra Chimbote" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-md">
+                            Guardar Equipo
+                        </button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:col-span-2 flex flex-col">
+                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b flex justify-between items-center">
+                        <span>Inventario de Campo</span>
+                        <span id="act-count" class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full font-bold">0 activos</span>
+                    </h2>
+                    <div id="lista-activos" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
+                        <div class="text-center py-8 text-slate-400 text-xs">Cargando inventario...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO 4: TAREO DE PERSONAL DE CAMPO -->
+            <div id="sec-tareo" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b">⏱️ Marcar Asistencia / Tareo</h2>
+                    <form id="tareo-form" class="space-y-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Colaborador / Personal</label>
+                            <input type="text" id="tar-personal" required placeholder="Nombres y Apellidos" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Obra / Asignación</label>
+                            <input type="text" id="tar-proyecto" required placeholder="Nombre de obra o comisión" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Fecha</label>
+                                <input type="date" id="tar-fecha" required class="w-full px-2 py-2 rounded-xl border border-slate-300 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Horas Trab.</label>
+                                <input type="number" id="tar-horas" value="8" required class="w-full px-2 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Condición</label>
+                            <select id="tar-estado" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium">
+                                <option value="Asistencia Normal">Asistencia Normal</option>
+                                <option value="Horas Extra">Horas Extra</option>
+                                <option value="Permiso / Falta">Permiso / Falta</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition shadow-md">
+                            Registrar Tareo
+                        </button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:col-span-2 flex flex-col">
+                    <h2 class="text-base font-bold text-slate-900 mb-3 pb-2 border-b flex justify-between items-center">
+                        <span>Reporte de Asistencia Semanal</span>
+                        <span id="tar-count" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">0 tareos</span>
+                    </h2>
+                    <div id="lista-tareo" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
+                        <div class="text-center py-8 text-slate-400 text-xs">Cargando tareo...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO 5: PANEL DE JEFATURA -->
+            <div id="sec-jefatura" class="hidden space-y-4 sm:space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <h2 class="text-lg font-black text-slate-900 mb-1">Resumen General de Operaciones</h2>
+                    <p class="text-xs text-slate-500 mb-5">Indicadores en tiempo real para gerencia y supervisores de COLVEC C&M S.A.C.</p>
+                    
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <div class="p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                            <span class="text-[10px] font-black text-blue-600 uppercase tracking-wider block">Obras Activas</span>
+                            <h3 class="text-2xl font-black text-blue-900 mt-1" id="stat-obras">0</h3>
+                        </div>
+                        <div class="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                            <span class="text-[10px] font-black text-emerald-600 uppercase tracking-wider block">Gastos Aprobados</span>
+                            <h3 class="text-xl font-black text-emerald-900 mt-1" id="stat-gastos">S/. 0.00</h3>
+                        </div>
+                        <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl">
+                            <span class="text-[10px] font-black text-indigo-600 uppercase tracking-wider block">Equipos Registrados</span>
+                            <h3 class="text-2xl font-black text-indigo-900 mt-1" id="stat-activos">0</h3>
+                        </div>
+                        <div class="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                            <span class="text-[10px] font-black text-amber-600 uppercase tracking-wider block">Jornadas Tareadas</span>
+                            <h3 class="text-2xl font-black text-amber-900 mt-1" id="stat-tareo">0</h3>
+                        </div>
+                    </div>
                 </div>
             </div>
 
         </main>
     </div>
 
-    <!-- SCRIPT DE FIREBASE Y LÓGICA DE LA APP -->
+    <!-- SCRIPT FIREBASE Y LÓGICA MÓVIL EN TIEMPO REAL -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyB80H5vQs7OrVdPNidN_h_68TweJH-P6rI",
@@ -171,11 +365,17 @@
         const userEmailDisplay = document.getElementById('user-email-display');
         const logoutBtn = document.getElementById('logout-btn');
 
-        const docForm = document.getElementById('doc-form');
-        const docsTableBody = document.getElementById('docs-table-body');
-        const docCount = document.getElementById('doc-count');
+        // Navegación de Pestañas
+        window.cambiarSeccion = function(seccion) {
+            ['obras', 'gastos', 'activos', 'tareo', 'jefatura'].forEach(s => {
+                document.getElementById(`sec-${s}`).classList.add('hidden');
+                document.getElementById(`nav-${s}`).className = "flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-200 transition";
+            });
+            document.getElementById(`sec-${seccion}`).classList.remove('hidden');
+            document.getElementById(`nav-${seccion}`).className = "flex-1 md:flex-none flex flex-col md:flex-row items-center justify-center py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold rounded-xl bg-blue-600 text-white transition shadow-sm";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
 
-        // Alternar Login / Registro
         toggleModeBtn.addEventListener('click', () => {
             isRegistering = !isRegistering;
             submitBtn.textContent = isRegistering ? 'Crear Cuenta' : 'Iniciar Sesión';
@@ -183,7 +383,6 @@
             errorMsg.classList.add('hidden');
         });
 
-        // Autenticación
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorMsg.classList.add('hidden');
@@ -201,94 +400,210 @@
 
         logoutBtn.addEventListener('click', () => signOut(auth));
 
-        // Control de vistas y carga de datos en tiempo real
-        let unsubscribe = null;
+        let unsubObras = null, unsubGastos = null, unsubActivos = null, unsubTareo = null;
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 authContainer.classList.add('hidden');
                 dashboardContainer.classList.remove('hidden');
                 userEmailDisplay.textContent = user.email;
-                cargarDocumentos();
+                iniciarEscuchas();
             } else {
                 dashboardContainer.classList.add('hidden');
                 authContainer.classList.remove('hidden');
                 emailInput.value = '';
                 passwordInput.value = '';
-                if (unsubscribe) unsubscribe();
+                if (unsubObras) unsubObras();
+                if (unsubGastos) unsubGastos();
+                if (unsubActivos) unsubActivos();
+                if (unsubTareo) unsubTareo();
             }
         });
 
-        // Guardar nuevo documento en Firestore
-        docForm.addEventListener('submit', async (e) => {
+        // Formularios
+        document.getElementById('obra-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const tipo = document.getElementById('doc-type').value;
-            const numero = document.getElementById('doc-number').value;
-            const entidad = document.getElementById('doc-entity').value;
-            const asunto = document.getElementById('doc-subject').value;
-            const estado = document.getElementById('doc-status').value;
-
             try {
-                await addDoc(collection(db, "documentos"), {
-                    tipo,
-                    numero,
-                    entidad,
-                    asunto,
-                    estado,
+                await addDoc(collection(db, "obras_servicios"), {
+                    tipo: document.getElementById('obra-tipo').value,
+                    nombre: document.getElementById('obra-nombre').value,
+                    cliente: document.getElementById('obra-cliente').value,
+                    presupuesto: parseFloat(document.getElementById('obra-presupuesto').value),
+                    adelanto: parseFloat(document.getElementById('obra-adelanto').value),
+                    avance: parseInt(document.getElementById('obra-avance').value),
+                    estado: document.getElementById('obra-estado').value,
                     fecha: new Date().toLocaleDateString()
                 });
-                docForm.reset();
-            } catch (error) {
-                alert("Error al guardar: " + error.message);
-            }
+                e.target.reset();
+            } catch(err) { alert(err.message); }
         });
 
-        // Cargar documentos en tiempo real
-        function cargarDocumentos() {
-            const q = query(collection(db, "documentos"));
-            unsubscribe = onSnapshot(q, (snapshot) => {
-                let html = "";
-                let count = 0;
-                snapshot.forEach((docSnap) => {
-                    count++;
-                    const data = docSnap.data();
-                    let badgeColor = "bg-yellow-100 text-yellow-800";
-                    if (data.estado === "Completado") badgeColor = "bg-green-100 text-green-800";
-                    if (data.estado === "En Trámite") badgeColor = "bg-blue-100 text-blue-800";
-
-                    html += `
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-3">
-                                <span class="font-bold text-slate-900 block">${data.tipo}: ${data.numero}</span>
-                                <span class="text-xs text-slate-400">${data.fecha}</span>
-                            </td>
-                            <td class="p-3 text-slate-700">${data.entidad}</td>
-                            <td class="p-3 text-slate-600 max-w-xs truncate">${data.asunto}</td>
-                            <td class="p-3">
-                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full ${badgeColor}">${data.estado}</span>
-                            </td>
-                            <td class="p-3 text-right">
-                                <button onclick="window.eliminarDoc('${docSnap.id}')" class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 bg-red-50 rounded">Eliminar</button>
-                            </td>
-                        </tr>
-                    `;
+        document.getElementById('gasto-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await addDoc(collection(db, "gastos"), {
+                    proveedor: document.getElementById('gas-proveedor').value,
+                    numero: document.getElementById('gas-num').value,
+                    monto: parseFloat(document.getElementById('gas-monto').value),
+                    descripcion: document.getElementById('gas-desc').value,
+                    estado: document.getElementById('gas-estado').value,
+                    fecha: new Date().toLocaleDateString()
                 });
-                if (count === 0) {
-                    html = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No hay cartas ni documentos registrados aún.</td></tr>`;
-                }
-                docsTableBody.innerHTML = html;
-                docCount.textContent = `${count} documentos`;
-            });
-        }
+                e.target.reset();
+            } catch(err) { alert(err.message); }
+        });
 
-        // Función global para eliminar documento
-        window.eliminarDoc = async function(id) {
-            if (confirm("¿Estás seguro de eliminar este registro?")) {
-                try {
-                    await deleteDoc(doc(db, "documentos", id));
-                } catch (error) {
-                    alert("Error al eliminar: " + error.message);
-                }
+        document.getElementById('activo-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await addDoc(collection(db, "activos"), {
+                    nombre: document.getElementById('act-nombre').value,
+                    serie: document.getElementById('act-serie').value,
+                    ubicacion: document.getElementById('act-ubicacion').value,
+                    estado: document.getElementById('act-estado').value,
+                    fecha: new Date().toLocaleDateString()
+                });
+                e.target.reset();
+            } catch(err) { alert(err.message); }
+        });
+
+        document.getElementById('tareo-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await addDoc(collection(db, "tareo"), {
+                    personal: document.getElementById('tar-personal').value,
+                    proyecto: document.getElementById('tar-proyecto').value,
+                    fecha: document.getElementById('tar-fecha').value,
+                    horas: document.getElementById('tar-horas').value,
+                    estado: document.getElementById('tar-estado').value
+                });
+                e.target.reset();
+            } catch(err) { alert(err.message); }
+        });
+
+        window.eliminarReg = async function(col, id) {
+            if (confirm("¿Eliminar este registro?")) {
+                await deleteDoc(doc(db, col, id));
             }
+        };
+
+        function iniciarEscuchas() {
+            // Escucha Obras (Visual Tarjetas Móviles)
+            unsubObras = onSnapshot(collection(db, "obras_servicios"), (snap) => {
+                let html = ""; let count = 0;
+                snap.forEach(d => {
+                    count++;
+                    let dat = d.data();
+                    html += `
+                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded">${dat.tipo}</span>
+                                <h3 class="font-bold text-slate-900 text-sm mt-1">${dat.nombre}</h3>
+                                <p class="text-xs text-slate-500">Cliente: ${dat.cliente}</p>
+                            </div>
+                            <button onclick="eliminarReg('obras_servicios', '${d.id}')" class="text-red-500 text-xs font-bold hover:underline">✕</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs bg-white p-2.5 rounded-lg border border-slate-100">
+                            <div>
+                                <span class="text-slate-400 block text-[10px]">Presupuesto:</span>
+                                <span class="font-bold text-slate-800">S/. ${dat.presupuesto.toFixed(2)}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block text-[10px]">Adelanto:</span>
+                                <span class="font-bold text-blue-600">S/. ${dat.adelanto.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="font-bold text-slate-600">Avance: ${dat.avance}%</span>
+                                <span class="text-[10px] font-bold text-blue-800">${dat.estado}</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: ${dat.avance}%"></div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                if (count === 0) html = `<div class="text-center py-8 text-slate-400 text-xs">Sin obras o servicios registrados.</div>`;
+                document.getElementById('lista-obras').innerHTML = html;
+                document.getElementById('obra-count').textContent = `${count} reg.`;
+                document.getElementById('stat-obras').textContent = count;
+            });
+
+            // Escucha Gastos
+            unsubGastos = onSnapshot(collection(db, "gastos"), (snap) => {
+                let html = ""; let count = 0; let total = 0;
+                snap.forEach(d => {
+                    count++;
+                    let dat = d.data();
+                    if(dat.estado === 'Aprobado') total += Number(dat.monto);
+                    html += `
+                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-slate-900 text-xs block">${dat.proveedor} (${dat.numero})</span>
+                            <span class="text-xs text-slate-500 block">${dat.descripcion}</span>
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded mt-1 inline-block">${dat.estado}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-black text-emerald-700 text-sm block">S/. ${dat.monto.toFixed(2)}</span>
+                            <button onclick="eliminarReg('gastos', '${d.id}')" class="text-red-500 text-xs font-bold hover:underline mt-1">✕</button>
+                        </div>
+                    </div>`;
+                });
+                if (count === 0) html = `<div class="text-center py-8 text-slate-400 text-xs">Sin gastos registrados.</div>`;
+                document.getElementById('lista-gastos').innerHTML = html;
+                document.getElementById('gas-total').textContent = `Total: S/. ${total.toFixed(2)}`;
+                document.getElementById('stat-gastos').textContent = `S/. ${total.toFixed(2)}`;
+            });
+
+            // Escucha Activos
+            unsubActivos = onSnapshot(collection(db, "activos"), (snap) => {
+                let html = ""; let count = 0;
+                snap.forEach(d => {
+                    count++;
+                    let dat = d.data();
+                    html += `
+                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-slate-900 text-xs block">${dat.nombre} [${dat.serie}]</span>
+                            <span class="text-xs text-slate-500 block">Ubicación: ${dat.ubicacion}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded block">${dat.estado}</span>
+                            <button onclick="eliminarReg('activos', '${d.id}')" class="text-red-500 text-xs font-bold hover:underline mt-1">✕</button>
+                        </div>
+                    </div>`;
+                });
+                if (count === 0) html = `<div class="text-center py-8 text-slate-400 text-xs">Sin equipos registrados.</div>`;
+                document.getElementById('lista-activos').innerHTML = html;
+                document.getElementById('act-count').textContent = `${count} activos`;
+                document.getElementById('stat-activos').textContent = count;
+            });
+
+            // Escucha Tareo
+            unsubTareo = onSnapshot(collection(db, "tareo"), (snap) => {
+                let html = ""; let count = 0;
+                snap.forEach(d => {
+                    count++;
+                    let dat = d.data();
+                    html += `
+                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-slate-900 text-xs block">${dat.personal}</span>
+                            <span class="text-xs text-slate-500 block">Obra: ${dat.proyecto} (${dat.fecha})</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-amber-700 text-xs block">${dat.horas} hrs - ${dat.estado}</span>
+                            <button onclick="eliminarReg('tareo', '${d.id}')" class="text-red-500 text-xs font-bold hover:underline mt-1">✕</button>
+                        </div>
+                    </div>`;
+                });
+                if (count === 0) html = `<div class="text-center py-8 text-slate-400 text-xs">Sin registros de tareo.</div>`;
+                document.getElementById('lista-tareo').innerHTML = html;
+                document.getElementById('tar-count').textContent = `${count} tareos`;
+                document.getElementById('stat-tareo').textContent = count;
+            });
         }
     </script>
 </body>
